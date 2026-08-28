@@ -12,6 +12,7 @@
     --success-color: #16a34a;
     --success-hover: #15803d;
     --danger-color: #dc2626;
+    --danger-hover: #b91c1c;
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --text-main: #1e293b;
@@ -158,6 +159,17 @@ body {
     background-color: var(--success-hover);
 }
 
+.btn-outline-danger {
+    background-color: #fff;
+    color: var(--danger-color);
+    border: 1px solid #fca5a5;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fee2e2;
+    border-color: var(--danger-color);
+}
+
 .btn-disabled {
     background-color: #f1f5f9;
     color: #94a3b8;
@@ -165,7 +177,7 @@ body {
     pointer-events: none;
 }
 
-/* ===== Chi tiết phí Admin Dashboard ===== */
+/* ===== Chi tiết phí ===== */
 .admin-fee-details {
     display: flex;
     flex-direction: column;
@@ -198,7 +210,7 @@ body {
     margin-top: 2px;
 }
 
-/* ===== Trang Thanh Toán ===== */
+/* ===== Trang Thanh Toán & Hóa Đơn ===== */
 .payment-card {
     display: flex;
     flex-direction: column;

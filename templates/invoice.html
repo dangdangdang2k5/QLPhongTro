@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hóa Đơn - {{ room.room_number }}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Nút quay lại -->
+      <a href="/" class="back-link">← Quay lại danh sách phòng</a>
+
+      <div class="card payment-card">
+        <!-- Header Hóa Đơn -->
+        <div class="payment-header">
+          <div class="payment-title">HÓA ĐƠN TIỀN PHÒNG</div>
+          <div class="payment-period">
+            {{ room.room_number }} — THÁNG {{ payment_month }}/{{ payment_year
+            }}
+          </div>
+        </div>
+
+        <!-- Bảng kê chi tiết các khoản phí -->
+        <div class="admin-fee-details" style="margin: 8px 0; padding: 16px">
+          <div class="fee-item">
+            <span class="fee-label">Tiền phòng:</span>
+            <span class="fee-value">{{ room.room_fee | currency }}</span>
+          </div>
+
+          <div class="fee-item">
+            <span class="fee-label">Tiền điện:</span>
+            <span class="fee-value">
+              {% if room.electricity_units > 0 %} {{ room.electricity_units }}
+              số × {{ room.electricity_price | currency }}/số
+              <br /><strong style="color: var(--text-main); font-size: 0.95rem"
+                >= {{ room.electricity_fee | currency }}</strong
+              >
+              {% else %} {{ room.electricity_fee | currency }} {% endif %}
+            </span>
+          </div>
+
+          <div class="fee-item">
+            <span class="fee-label">Tiền nước:</span>
+            <span class="fee-value">{{ room.water_fee | currency }}</span>
+          </div>
+
+          <div class="fee-item fee-total">
+            <span class="fee-label" style="font-weight: 800; font-size: 1.05rem"
+              >TỔNG CỘNG:</span
+            >
+            <span
+              class="fee-value"
+              style="
+                font-size: 1.4rem;
+                color: var(--primary-color);
+                font-weight: 800;
+              "
+            >
+              {{ room.total_amount | currency }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Trạng thái thanh toán & Nút hành động -->
+        <div style="text-align: center; margin: 4px 0 12px 0">
+          {% if room.status == 'UNPAID' %}
+          <span
+            class="status-badge status-unpaid"
+            style="font-size: 0.9rem; padding: 6px 16px"
+          >
+            🔴 Chưa thanh toán
+          </span>
+          {% elif room.status == 'PENDING' %}
+          <span
+            class="status-badge status-pending"
+            style="font-size: 0.9rem; padding: 6px 16px"
+          >
+            🟡 Đang chờ xác nhận
+          </span>
+          {% elif room.status == 'PAID' %}
+          <span
+            class="status-badge status-paid"
+            style="font-size: 0.9rem; padding: 6px 16px"
+          >
+            🟢 Đã thanh toán
+          </span>
+          {% endif %}
+        </div>
+
+        {% if room.status == 'UNPAID' %}
+        <!-- Nút chuyển sang trang thanh toán QR -->
+        <a
+          href="/payment/{{ room.id }}"
+          class="btn btn-primary"
+          style="font-size: 1.05rem; padding: 14px"
+        >
+          💳 TIẾP TỤC THANH TOÁN
+        </a>
+
+        {% elif room.status == 'PENDING' %}
+        <div class="notice-box notice-pending">
+          <strong>🟡 Bạn đã gửi yêu cầu thanh toán</strong>
+          <p style="margin-top: 6px; font-size: 0.9rem">
+            Vui lòng chờ chủ trọ kiểm tra tài khoản và duyệt thanh toán.
+          </p>
+        </div>
+
+        {% elif room.status == 'PAID' %}
+        <div class="notice-box notice-paid">
+          <strong>🟢 Thanh toán đã hoàn thành</strong>
+          <p style="margin-top: 6px; font-size: 0.9rem">
+            Cảm ơn bạn đã hoàn tất thanh toán tiền phòng tháng {{ payment_month
+            }}/{{ payment_year }}.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+
+      <footer class="footer">
+        <a href="/">🏠 Về trang chủ</a>
+      </footer>
+    </div>
+  </body>
+</html>

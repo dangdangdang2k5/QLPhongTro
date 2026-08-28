@@ -1,221 +1,147 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản Lý {{ room.room_number }} - Hóa Đơn</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập Nhật Hóa Đơn - {{ room.room_number }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
     <div class="container">
-      <!-- Nút quay lại -->
-      <a href="/admin/dashboard" class="back-link">← Quay lại Dashboard</a>
+        <!-- Nút quay lại -->
+        <a href="/admin/dashboard" class="back-link">← Quay lại Dashboard</a>
 
-      <div class="card payment-card">
-        <!-- Tiêu đề -->
-        <div class="payment-header">
-          <div class="payment-title">
-            QUẢN LÝ {{ room.room_number | upper }}
-          </div>
-          <div class="payment-period">
-            Kỳ thanh toán: Tháng {{ payment_month }}/{{ payment_year }}
-          </div>
+        <div class="card payment-card">
+            <!-- Tiêu đề -->
+            <div class="payment-header">
+                <div class="payment-title">CẬP NHẬT HÓA ĐƠN {{ room.room_number | upper }}</div>
+                <div class="payment-period">Kỳ thanh toán: Tháng {{ payment_month }}/{{ payment_year }}</div>
+            </div>
+
+            <!-- Trạng thái phòng hiện tại -->
+            <div style="text-align: center;">
+                {% if room.status == 'UNPAID' %}
+                    <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                {% elif room.status == 'PENDING' %}
+                    <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                {% elif room.status == 'PAID' %}
+                    <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                {% endif %}
+            </div>
+
+            <!-- Cảnh báo nếu phòng đã thanh toán -->
+            {% if room.status == 'PAID' %}
+            <div class="alert-warning" style="background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 0.9rem; margin-top: 4px;">
+                ⚠️ <strong>Lưu ý:</strong> Bạn đang chỉnh sửa một hóa đơn <strong>ĐÃ THANH TOÁN</strong>. Trạng thái ĐÃ THANH TOÁN sẽ được giữ nguyên sau khi lưu (trừ khi bạn dùng chức năng Reset).
+            </div>
+            {% endif %}
+
+            <!-- Form cập nhật hóa đơn -->
+            <form method="POST" action="/admin/room/{{ room.id }}" id="invoiceForm" {% if room.status == 'PAID' %}onsubmit="return confirm('Phòng này đã thanh toán. Bạn có chắc chắn muốn lưu thay đổi hóa đơn không?');"{% endif %}>
+                <!-- 1. Tiền phòng -->
+                <div class="form-group">
+                    <label for="room_fee" class="form-label">1. Tiền phòng (VNĐ):</label>
+                    <input type="number" id="room_fee" name="room_fee" class="form-input" 
+                           value="{{ room.room_fee }}" min="0" step="10000" required>
+                </div>
+
+                <!-- 2. Tiền điện: Số điện & Đơn giá -->
+                <div class="form-group">
+                    <label for="electricity_units" class="form-label">2. Tiền điện:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Số điện:</span>
+                            <input type="number" id="electricity_units" name="electricity_units" class="form-input" 
+                                   value="{{ room.electricity_units }}" min="0" placeholder="Số điện" required>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Đơn giá (VNĐ/số):</span>
+                            <input type="number" id="electricity_price" name="electricity_price" class="form-input" 
+                                   value="{{ room.electricity_price }}" min="0" step="100" placeholder="Đơn giá" required>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">
+                        Thành tiền điện: <strong id="calcElectricityText" style="color: var(--primary-color);">0đ</strong>
+                    </p>
+                </div>
+
+                <!-- 3. Tiền nước -->
+                <div class="form-group">
+                    <label for="water_fee" class="form-label">3. Tiền nước (VNĐ):</label>
+                    <input type="number" id="water_fee" name="water_fee" class="form-input" 
+                           value="{{ room.water_fee }}" min="0" step="5000" placeholder="Nhập tiền nước" required>
+                </div>
+
+                <!-- Bảng tổng kết tiền tự động -->
+                <div class="admin-fee-details" style="margin: 16px 0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">BẢNG TỔNG HỢP HÓA ĐƠN</div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền phòng:</span>
+                        <span class="fee-value" id="summaryRoomFee">0đ</span>
+                    </div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền điện:</span>
+                        <span class="fee-value" id="summaryElectricityFee">0đ</span>
+                    </div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền nước:</span>
+                        <span class="fee-value" id="summaryWaterFee">0đ</span>
+                    </div>
+                    <div class="fee-item fee-total">
+                        <span class="fee-label" style="font-weight: 800; font-size: 1rem;">TỔNG THANH TOÁN:</span>
+                        <span class="fee-value" id="summaryTotalAmount" style="font-size: 1.35rem; color: var(--primary-color); font-weight: 800;">
+                            0đ
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Nút lưu hóa đơn -->
+                <button type="submit" class="btn btn-primary" style="font-size: 1.05rem; padding: 14px;">
+                    💾 LƯU HÓA ĐƠN
+                </button>
+            </form>
         </div>
 
-        <!-- Trạng thái phòng -->
-        <div style="text-align: center">
-          {% if room.status == 'UNPAID' %}
-          <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
-          {% elif room.status == 'PENDING' %}
-          <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
-          {% elif room.status == 'PAID' %}
-          <span class="status-badge status-paid">🟢 Đã thanh toán</span>
-          {% endif %}
-        </div>
-
-        <!-- Form cập nhật hóa đơn -->
-        <form method="POST" action="/admin/room/{{ room.id }}" id="invoiceForm">
-          <!-- 1. Tiền phòng -->
-          <div class="form-group">
-            <label for="room_fee" class="form-label"
-              >1. Tiền phòng (VNĐ):</label
-            >
-            <input
-              type="number"
-              id="room_fee"
-              name="room_fee"
-              class="form-input"
-              value="{{ room.room_fee }}"
-              min="0"
-              step="10000"
-              required
-            />
-          </div>
-
-          <!-- 2. Tiền điện -->
-          <div class="form-group">
-            <label for="electricity_units" class="form-label"
-              >2. Tiền điện (4.000đ / số):</label
-            >
-            <div style="display: flex; gap: 10px; align-items: center">
-              <input
-                type="number"
-                id="electricity_units"
-                name="electricity_units"
-                class="form-input"
-                value="{{ room.electricity_units }}"
-                min="0"
-                placeholder="Nhập số điện tiêu thụ"
-                required
-              />
-              <span
-                style="
-                  font-size: 0.9rem;
-                  font-weight: 600;
-                  color: var(--text-muted);
-                  white-space: nowrap;
-                "
-                >số điện</span
-              >
-            </div>
-            <p
-              style="
-                font-size: 0.85rem;
-                color: var(--text-muted);
-                margin-top: 4px;
-              "
-            >
-              Thành tiền điện:
-              <strong
-                id="calcElectricityText"
-                style="color: var(--primary-color)"
-                >0đ</strong
-              >
-            </p>
-          </div>
-
-          <!-- 3. Tiền nước -->
-          <div class="form-group">
-            <label for="water_fee" class="form-label"
-              >3. Tiền nước (VNĐ):</label
-            >
-            <input
-              type="number"
-              id="water_fee"
-              name="water_fee"
-              class="form-input"
-              value="{{ room.water_fee }}"
-              min="0"
-              step="5000"
-              placeholder="Nhập tiền nước"
-              required
-            />
-          </div>
-
-          <!-- Bảng tổng kết tiền tự động -->
-          <div class="admin-fee-details" style="margin: 16px 0">
-            <div
-              style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px"
-            >
-              BẢNG TỔNG HỢP HÓA ĐƠN
-            </div>
-            <div class="fee-item">
-              <span class="fee-label">Tiền phòng:</span>
-              <span class="fee-value" id="summaryRoomFee">0đ</span>
-            </div>
-            <div class="fee-item">
-              <span class="fee-label">Tiền điện:</span>
-              <span class="fee-value" id="summaryElectricityFee">0đ</span>
-            </div>
-            <div class="fee-item">
-              <span class="fee-label">Tiền nước:</span>
-              <span class="fee-value" id="summaryWaterFee">0đ</span>
-            </div>
-            <div class="fee-item fee-total">
-              <span class="fee-label" style="font-weight: 800; font-size: 1rem"
-                >TỔNG THANH TOÁN:</span
-              >
-              <span
-                class="fee-value"
-                id="summaryTotalAmount"
-                style="
-                  font-size: 1.35rem;
-                  color: var(--primary-color);
-                  font-weight: 800;
-                "
-              >
-                0đ
-              </span>
-            </div>
-          </div>
-
-          <!-- Nút xác nhận -->
-          <button
-            type="submit"
-            class="btn btn-primary"
-            style="font-size: 1.05rem; padding: 14px"
-          >
-            💾 XÁC NHẬN HÓA ĐƠN
-          </button>
-        </form>
-      </div>
-
-      <footer class="footer">
-        <a href="/admin/dashboard">← Quay lại Dashboard</a>
-      </footer>
+        <footer class="footer">
+            <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        </footer>
     </div>
 
     <!-- Script tự động tính tiền thời gian thực -->
     <script>
-      const ELECTRICITY_PRICE = 4000;
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount)) + 'đ';
+        }
 
-      function formatCurrency(amount) {
-        return new Intl.NumberFormat("vi-VN").format(Math.round(amount)) + "đ";
-      }
+        function calculateInvoice() {
+            const roomFee = parseFloat(document.getElementById('room_fee').value) || 0;
+            const electricityUnits = parseFloat(document.getElementById('electricity_units').value) || 0;
+            const electricityPrice = parseFloat(document.getElementById('electricity_price').value) || 0;
+            const waterFee = parseFloat(document.getElementById('water_fee').value) || 0;
 
-      function calculateInvoice() {
-        const roomFee =
-          parseFloat(document.getElementById("room_fee").value) || 0;
-        const electricityUnits =
-          parseFloat(document.getElementById("electricity_units").value) || 0;
-        const waterFee =
-          parseFloat(document.getElementById("water_fee").value) || 0;
+            // Tính tiền điện = số điện * đơn giá
+            const electricityFee = electricityUnits * electricityPrice;
+            
+            // Tính tổng tiền = Tiền phòng + Tiền điện + Tiền nước
+            const totalAmount = roomFee + electricityFee + waterFee;
 
-        // Tính tiền điện = số điện * 4.000đ
-        const electricityFee = electricityUnits * ELECTRICITY_PRICE;
+            // Cập nhật lên giao diện
+            document.getElementById('calcElectricityText').innerText = 
+                `${electricityUnits} số × ${formatCurrency(electricityPrice)} = ${formatCurrency(electricityFee)}`;
+            document.getElementById('summaryRoomFee').innerText = formatCurrency(roomFee);
+            document.getElementById('summaryElectricityFee').innerText = formatCurrency(electricityFee);
+            document.getElementById('summaryWaterFee').innerText = formatCurrency(waterFee);
+            document.getElementById('summaryTotalAmount').innerText = formatCurrency(totalAmount);
+        }
 
-        // Tính tổng tiền = Tiền phòng + Tiền điện + Tiền nước
-        const totalAmount = roomFee + electricityFee + waterFee;
+        // Lắng nghe sự kiện người dùng nhập liệu
+        document.getElementById('room_fee').addEventListener('input', calculateInvoice);
+        document.getElementById('electricity_units').addEventListener('input', calculateInvoice);
+        document.getElementById('electricity_price').addEventListener('input', calculateInvoice);
+        document.getElementById('water_fee').addEventListener('input', calculateInvoice);
 
-        // Cập nhật lên giao diện
-        document.getElementById("calcElectricityText").innerText =
-          `${electricityUnits} số × 4.000đ = ${formatCurrency(electricityFee)}`;
-        document.getElementById("summaryRoomFee").innerText =
-          formatCurrency(roomFee);
-        document.getElementById("summaryElectricityFee").innerText =
-          formatCurrency(electricityFee);
-        document.getElementById("summaryWaterFee").innerText =
-          formatCurrency(waterFee);
-        document.getElementById("summaryTotalAmount").innerText =
-          formatCurrency(totalAmount);
-      }
-
-      // Lắng nghe sự kiện người dùng nhập liệu
-      document
-        .getElementById("room_fee")
-        .addEventListener("input", calculateInvoice);
-      document
-        .getElementById("electricity_units")
-        .addEventListener("input", calculateInvoice);
-      document
-        .getElementById("water_fee")
-        .addEventListener("input", calculateInvoice);
-
-      // Tính toán ngay khi tải trang
-      calculateInvoice();
+        // Tính toán ngay khi tải trang
+        calculateInvoice();
     </script>
-  </body>
+</body>
 </html>

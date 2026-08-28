@@ -1,145 +1,114 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh Toán - {{ room.room_number }}</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
-  <body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
     <div class="container">
-      <!-- Nút quay lại -->
-      <a href="/" class="back-link">← Quay lại danh sách phòng</a>
+        <!-- Nút quay lại hóa đơn -->
+        <a href="/invoice/{{ room.id }}" class="back-link">← Quay lại chi tiết hóa đơn</a>
 
-      <div class="payment-card">
-        <!-- Tiêu đề trang thanh toán -->
-        <div class="payment-header">
-          <div class="payment-title">THANH TOÁN TIỀN PHÒNG</div>
-          <div class="payment-period">
-            {{ room.room_number }} — THÁNG {{ payment_month }}/{{ payment_year
-            }}
-          </div>
-        </div>
-
-        <!-- Trạng thái hiện tại -->
-        <div style="text-align: center">
-          {% if room.status == 'UNPAID' %}
-          <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
-          {% elif room.status == 'PENDING' %}
-          <span class="status-badge status-pending">🟡 Chờ duyệt</span>
-          {% elif room.status == 'PAID' %}
-          <span class="status-badge status-paid">🟢 Đã thanh toán</span>
-          {% endif %}
-        </div>
-
-        <!-- Hiển thị số tiền -->
-        <div class="payment-amount-box">
-          <div class="amount-label">Số tiền cần thanh toán</div>
-          <div class="amount-value">{{ room.amount | currency }}</div>
-        </div>
-
-        {% if room.status == 'UNPAID' %}
-        <!-- Khu vực hiển thị mã QR VietQR tự động -->
-        <div class="qr-section">
-          <img
-            src="{{ qr_url }}"
-            alt="Mã VietQR thanh toán {{ room.room_number }}"
-            class="qr-image"
-            loading="lazy"
-          />
-          <p class="qr-hint">
-            Mở app Ngân hàng để quét mã QR và thanh toán tự động
-          </p>
-        </div>
-
-        <!-- Thông tin chuyển khoản chi tiết -->
-        <div class="transfer-info-list">
-          <div class="info-row">
-            <span class="info-label">Ngân hàng:</span>
-            <span class="info-value">{{ bank_name }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Số tài khoản:</span>
-            <div class="info-value-group">
-              <span class="info-value" id="bank-acc">{{ bank_account }}</span>
-              <button
-                type="button"
-                class="copy-btn"
-                onclick="copyToClipboard('bank-acc', this)"
-              >
-                Sao chép
-              </button>
+        <div class="payment-card">
+            <!-- Tiêu đề trang thanh toán -->
+            <div class="payment-header">
+                <div class="payment-title">THANH TOÁN TIỀN PHÒNG</div>
+                <div class="payment-period">{{ room.room_number }} — THÁNG {{ payment_month }}/{{ payment_year }}</div>
             </div>
-          </div>
-          {% if bank_account_name %}
-          <div class="info-row">
-            <span class="info-label">Chủ tài khoản:</span>
-            <span class="info-value">{{ bank_account_name }}</span>
-          </div>
-          {% endif %}
-          <div class="info-row">
-            <span class="info-label">Số tiền:</span>
-            <span class="info-value highlight"
-              >{{ room.amount | currency }}</span
-            >
-          </div>
-          <div class="info-row">
-            <span class="info-label">Nội dung CK:</span>
-            <div class="info-value-group">
-              <span class="info-value highlight" id="transfer-desc"
-                >{{ transfer_content }}</span
-              >
-              <button
-                type="button"
-                class="copy-btn"
-                onclick="copyToClipboard('transfer-desc', this)"
-              >
-                Sao chép
-              </button>
+
+            <!-- Trạng thái hiện tại -->
+            <div style="text-align: center;">
+                {% if room.status == 'UNPAID' %}
+                    <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                {% elif room.status == 'PENDING' %}
+                    <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                {% elif room.status == 'PAID' %}
+                    <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                {% endif %}
             </div>
-          </div>
+
+            <!-- Hiển thị số tiền -->
+            <div class="payment-amount-box">
+                <div class="amount-label">Số tiền cần thanh toán</div>
+                <div class="amount-value">{{ room.amount | currency }}</div>
+            </div>
+
+            {% if room.status == 'UNPAID' %}
+                <!-- Khu vực hiển thị mã QR VietQR tự động -->
+                <div class="qr-section">
+                    <img src="{{ qr_url }}" alt="Mã VietQR thanh toán {{ room.room_number }}" class="qr-image" loading="lazy">
+                    <p class="qr-hint">Mở app Ngân hàng để quét mã QR và thanh toán tự động</p>
+                </div>
+
+                <!-- Thông tin chuyển khoản chi tiết -->
+                <div class="transfer-info-list">
+                    <div class="info-row">
+                        <span class="info-label">Ngân hàng:</span>
+                        <span class="info-value">{{ bank_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số tài khoản:</span>
+                        <div class="info-value-group">
+                            <span class="info-value" id="bank-acc">{{ bank_account }}</span>
+                            <button type="button" class="copy-btn" onclick="copyToClipboard('bank-acc', this)">Sao chép</button>
+                        </div>
+                    </div>
+                    {% if bank_account_name %}
+                    <div class="info-row">
+                        <span class="info-label">Chủ tài khoản:</span>
+                        <span class="info-value">{{ bank_account_name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-row">
+                        <span class="info-label">Số tiền:</span>
+                        <span class="info-value highlight">{{ room.amount | currency }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Nội dung CK:</span>
+                        <div class="info-value-group">
+                            <span class="info-value highlight" id="transfer-desc">{{ transfer_content }}</span>
+                            <button type="button" class="copy-btn" onclick="copyToClipboard('transfer-desc', this)">Sao chép</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút xác nhận chuyển khoản -->
+                <form method="POST" action="/payment/{{ room.id }}/confirm">
+                    <button type="submit" class="btn btn-success">✅ Tôi đã chuyển khoản</button>
+                </form>
+
+            {% elif room.status == 'PENDING' %}
+                <!-- Giao diện khi đang chờ duyệt -->
+                <div class="notice-box notice-pending">
+                    <strong>🟡 Đang chờ chủ trọ xác nhận</strong>
+                    <p style="margin-top: 8px; font-size: 0.9rem;">
+                        Bạn đã gửi thông báo chuyển khoản.<br>
+                        Vui lòng chờ chủ trọ kiểm tra tài khoản và duyệt thanh toán.
+                    </p>
+                </div>
+                <span class="btn btn-disabled">Đang chờ xác nhận...</span>
+
+            {% elif room.status == 'PAID' %}
+                <!-- Giao diện khi đã thanh toán -->
+                <div class="notice-box notice-paid">
+                    <strong>🟢 Đã thanh toán thành công</strong>
+                    <p style="margin-top: 8px; font-size: 0.9rem;">
+                        {{ room.room_number }} đã hoàn tất thanh toán tiền phòng tháng {{ payment_month }}/{{ payment_year }}.
+                    </p>
+                </div>
+                <span class="btn btn-disabled">Đã hoàn tất</span>
+            {% endif %}
+
         </div>
 
-        <!-- Nút xác nhận chuyển khoản -->
-        <form method="POST" action="/payment/{{ room.id }}/confirm">
-          <button type="submit" class="btn btn-success">
-            ✅ Tôi đã chuyển khoản
-          </button>
-        </form>
-
-        {% elif room.status == 'PENDING' %}
-        <!-- Giao diện khi đang chờ duyệt -->
-        <div class="notice-box notice-pending">
-          <strong>🟡 Đang chờ chủ trọ xác nhận</strong>
-          <p style="margin-top: 8px; font-size: 0.9rem">
-            Bạn đã gửi thông báo chuyển khoản.<br />
-            Vui lòng chờ chủ trọ kiểm tra tài khoản và duyệt thanh toán.
-          </p>
-        </div>
-        <span class="btn btn-disabled">Đang chờ xác nhận...</span>
-
-        {% elif room.status == 'PAID' %}
-        <!-- Giao diện khi đã thanh toán -->
-        <div class="notice-box notice-paid">
-          <strong>🟢 Đã thanh toán thành công</strong>
-          <p style="margin-top: 8px; font-size: 0.9rem">
-            {{ room.room_number }} đã hoàn tất thanh toán tiền phòng tháng {{
-            payment_month }}/{{ payment_year }}.
-          </p>
-        </div>
-        <span class="btn btn-disabled">Đã hoàn tất</span>
-        {% endif %}
-      </div>
-
-      <!-- Footer -->
-      <footer class="footer">
-        <a href="/">🏠 Về trang chủ</a>
-      </footer>
+        <!-- Footer -->
+        <footer class="footer">
+            <a href="/">🏠 Về trang chủ</a>
+        </footer>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-  </body>
+</body>
 </html>

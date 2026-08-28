@@ -49,7 +49,7 @@ def currency_filter(value):
 
 @app.route('/')
 def home():
-    """Trang chủ dành cho người thuê: hiển thị danh sách 6 phòng với tổng tiền mới nhất."""
+    """Trang chủ dành cho người thuê: hiển thị danh sách 6 phòng với nút 'Kiểm tra hóa đơn'."""
     conn = get_db()
     cursor = conn.cursor()
     query = '''
@@ -63,6 +63,34 @@ def home():
     rooms = cursor.fetchall()
     conn.close()
     return render_template('index.html', rooms=rooms)
+
+@app.route('/invoice/<int:room_id>')
+def invoice_detail(room_id):
+    """Trang chi tiết hóa đơn: tiền phòng, số điện x đơn giá, tiền nước, tổng tiền."""
+    conn = get_db()
+    cursor = conn.cursor()
+    query = '''
+        SELECT r.id, r.room_number, p.room_fee, p.electricity_units, 
+               p.electricity_price, p.electricity_fee, p.water_fee, 
+               p.total_amount, p.status
+        FROM rooms r
+        JOIN payments p ON r.id = p.room_id 
+             AND p.payment_month = ? AND p.payment_year = ?
+        WHERE r.id = ?
+    '''
+    cursor.execute(query, (int(PAYMENT_MONTH), int(PAYMENT_YEAR), room_id))
+    room = cursor.fetchone()
+    conn.close()
+
+    if room is None:
+        abort(404)
+
+    return render_template(
+        'invoice.html',
+        room=room,
+        payment_month=PAYMENT_MONTH,
+        payment_year=PAYMENT_YEAR
+    )
 
 @app.route('/payment/<int:room_id>')
 def payment(room_id):
@@ -164,7 +192,7 @@ def admin_dashboard():
     conn = get_db()
     cursor = conn.cursor()
     query = '''
-        SELECT r.id, r.room_number, p.room_fee, p.electricity_units, 
+        SELECT r.id, r.room_number, p.room_fee, p.electricity_units, p.electricity_price,
                p.electricity_fee, p.water_fee, p.total_amount, p.status
         FROM rooms r
         LEFT JOIN payments p ON r.id = p.room_id 
@@ -185,7 +213,7 @@ def admin_dashboard():
 @app.route('/admin/room/<int:room_id>', methods=['GET', 'POST'])
 @admin_required
 def admin_room_detail(room_id):
-    """Admin nhập và chỉnh sửa thông tin tiền phòng, số điện, tiền nước."""
+    """Admin nhập và chỉnh sửa thông tin tiền phòng, số điện, đơn giá, tiền nước."""
     conn = get_db()
     cursor = conn.cursor()
 
@@ -193,18 +221,25 @@ def admin_room_detail(room_id):
         try:
             room_fee = int(request.form.get('room_fee', 2000000))
             electricity_units = int(request.form.get('electricity_units', 0))
+            electricity_price = int(request.form.get('electricity_price', 4000))
             water_fee = int(request.form.get('water_fee', 0))
         except (ValueError, TypeError):
             room_fee = 2000000
             electricity_units = 0
+            electricity_price = 4000
             water_fee = 0
 
-        # Backend tự tính toán lại: Tiền điện = số điện * 4.000đ
-        electricity_price = 4000
+        # Backend validation: không cho số âm
+        room_fee = max(0, room_fee)
+        electricity_units = max(0, electricity_units)
+        electricity_price = max(0, electricity_price)
+        water_fee = max(0, water_fee)
+
+        # Backend tự tính toán lại
         electricity_fee = electricity_units * electricity_price
         total_amount = room_fee + electricity_fee + water_fee
 
-        # Lưu thông tin hóa đơn vào SQLite
+        # Lưu thông tin hóa đơn vào SQLite (giữ nguyên trạng thái status hiện tại)
         cursor.execute('''
             UPDATE payments 
             SET room_fee = ?,
@@ -226,7 +261,7 @@ def admin_room_detail(room_id):
 
     # GET: Xem form chi tiết phòng
     query = '''
-        SELECT r.id, r.room_number, p.room_fee, p.electricity_units, 
+        SELECT r.id, r.room_number, p.room_fee, p.electricity_units, p.electricity_price,
                p.electricity_fee, p.water_fee, p.total_amount, p.status
         FROM rooms r
         JOIN payments p ON r.id = p.room_id 
@@ -271,6 +306,21 @@ def approve_payment(room_id):
         )
         conn.commit()
 
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/payment/<int:room_id>/reset', methods=['POST'])
+@admin_required
+def reset_payment(room_id):
+    """Admin reset trạng thái thanh toán về UNPAID mà KHÔNG làm mất dữ liệu hóa đơn."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE payments 
+        SET status = 'UNPAID', updated_at = CURRENT_TIMESTAMP 
+        WHERE room_id = ? AND payment_month = ? AND payment_year = ?
+    ''', (room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)))
+    conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
 
