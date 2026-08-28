@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhập Mã Truy Cập - QL Phòng Trọ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="card login-card" style="margin-top: 40px;">
+            <div class="login-header">
+                <div class="login-icon">🏠</div>
+                <h1 class="login-title">QL PHÒNG TRỌ</h1>
+                <p class="login-subtitle" style="font-weight: 700; color: var(--text-main); margin-top: 6px;">NHẬP MÃ TRUY CẬP</p>
+            </div>
+
+            {% if error %}
+            <div class="alert-error">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/access" class="login-form">
+                <div class="form-group">
+                    <input type="password" id="access_key" name="access_key" class="form-input" 
+                           placeholder="Nhập mã truy cập..." required autofocus autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px; font-size: 1.05rem; padding: 13px;">
+                    VÀO
+                </button>
+            </form>
+        </div>
+
+        <footer class="footer">
+            <a href="/admin">🔐 Dành cho Quản trị viên (Admin)</a>
+        </footer>
+    </div>
+</body>
+</html>

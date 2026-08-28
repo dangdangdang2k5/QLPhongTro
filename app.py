@@ -9,9 +9,12 @@ from db import get_db, init_db
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-12345').strip()
+app.config['SECRET_KEY'] = (os.getenv('FLASK_SECRET_KEY') or os.getenv('SECRET_KEY', 'dev-secret-key-12345')).strip()
 
-# Cấu hình Admin (loại bỏ khoảng trắng thừa nếu có)
+# Cấu hình Access Key cho người thuê
+SITE_ACCESS_KEY = os.getenv('SITE_ACCESS_KEY', 'PhongTroMinhHai').strip()
+
+# Cấu hình Admin
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin').strip()
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123').strip()
 
@@ -25,6 +28,15 @@ PAYMENT_YEAR = os.getenv('PAYMENT_YEAR', '2026').strip()
 
 # Khởi tạo database và seed dữ liệu nếu chưa có
 init_db()
+
+# Decorator yêu cầu mã Access Key dành cho Người thuê
+def tenant_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('site_authorized'):
+            return redirect(url_for('site_access'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Decorator yêu cầu quyền Admin
 def admin_required(f):
@@ -44,10 +56,38 @@ def currency_filter(value):
         return f"{value}đ"
 
 # ==========================================
-# USER (NGƯỜI THUÊ) ROUTES
+# ACCESS KEY & AUTH ROUTES (NGƯỜI THUÊ)
+# ==========================================
+
+@app.route('/access', methods=['GET', 'POST'])
+def site_access():
+    """Trang xác thực Access Key dành cho người thuê."""
+    if session.get('site_authorized'):
+        return redirect(url_for('home'))
+
+    error = None
+    if request.method == 'POST':
+        key_input = request.form.get('access_key', '').strip()
+        if key_input == SITE_ACCESS_KEY:
+            session['site_authorized'] = True
+            return redirect(url_for('home'))
+        else:
+            error = '❌ Mã truy cập không đúng.'
+
+    return render_template('access.html', error=error)
+
+@app.route('/logout')
+def site_logout():
+    """Thoát quyền truy cập của người thuê."""
+    session.pop('site_authorized', None)
+    return redirect(url_for('site_access'))
+
+# ==========================================
+# USER (NGƯỜI THUÊ) ROUTES - ĐƯỢC BẢO VỆ BỞI ACCESS KEY
 # ==========================================
 
 @app.route('/')
+@tenant_required
 def home():
     """Trang chủ dành cho người thuê: hiển thị danh sách 6 phòng với nút 'Kiểm tra hóa đơn'."""
     conn = get_db()
@@ -65,6 +105,7 @@ def home():
     return render_template('index.html', rooms=rooms)
 
 @app.route('/invoice/<int:room_id>')
+@tenant_required
 def invoice_detail(room_id):
     """Trang chi tiết hóa đơn: tiền phòng, số điện x đơn giá, tiền nước, tổng tiền."""
     conn = get_db()
@@ -93,6 +134,7 @@ def invoice_detail(room_id):
     )
 
 @app.route('/payment/<int:room_id>')
+@tenant_required
 def payment(room_id):
     """Trang thanh toán chi tiết cho từng phòng với mã VietQR tạo động theo tổng tiền."""
     conn = get_db()
@@ -137,6 +179,7 @@ def payment(room_id):
     )
 
 @app.route('/payment/<int:room_id>/confirm', methods=['POST'])
+@tenant_required
 def confirm_payment(room_id):
     """Người thuê bấm 'Tôi đã chuyển khoản' -> chuyển trạng thái UNPAID sang PENDING."""
     conn = get_db()
@@ -163,7 +206,7 @@ def confirm_payment(room_id):
     return redirect(url_for('payment', room_id=room_id))
 
 # ==========================================
-# ADMIN ROUTES
+# ADMIN ROUTES (HOÀN TOÀN ĐỘC LẬP VỚI ACCESS KEY)
 # ==========================================
 
 @app.route('/admin', methods=['GET', 'POST'])
