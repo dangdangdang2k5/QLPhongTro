@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thu Tiền Phòng Trọ</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <h1>🏠 NHÀ TRỌ</h1>
+        <p>Danh sách thanh toán tiền phòng</p>
+      </header>
+
+      <!-- Danh sách 6 phòng -->
+      <main class="room-list">
+        {% for room in rooms %}
+        <div class="room-card">
+          <div class="room-card-header">
+            <span class="room-name">{{ room.room_number }}</span>
+            {% if room.status == 'UNPAID' %}
+            <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+            {% elif room.status == 'PENDING' %}
+            <span class="status-badge status-pending">🟡 Chờ duyệt</span>
+            {% elif room.status == 'PAID' %}
+            <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+            {% endif %}
+          </div>
+
+          <div class="room-amount">{{ room.amount | currency }}</div>
+
+          <div class="room-action">
+            {% if room.status == 'UNPAID' %}
+            <a href="/payment/{{ room.id }}" class="btn btn-primary"
+              >Thanh toán</a
+            >
+            {% elif room.status == 'PENDING' %}
+            <span class="btn btn-disabled">Đang chờ xác nhận...</span>
+            {% elif room.status == 'PAID' %}
+            <span class="btn btn-disabled">Đã hoàn tất</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <a href="/admin">🔐 Quản trị viên (Admin)</a>
+      </footer>
+    </div>
+  </body>
+</html>

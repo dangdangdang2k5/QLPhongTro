@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quản Lý Phòng Trọ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Dashboard -->
+        <header class="admin-header">
+            <div>
+                <h1>ADMIN DASHBOARD</h1>
+                <p>Kỳ thanh toán: Tháng {{ payment_month }}/{{ payment_year }}</p>
+            </div>
+            <a href="/admin/logout" class="btn-logout">Đăng xuất</a>
+        </header>
+
+        <!-- KHU VỰC: THANH TOÁN ĐANG CHỜ XÁC NHẬN -->
+        {% set pending_rooms = rooms | selectattr('status', 'equalto', 'PENDING') | list %}
+        {% if pending_rooms | length > 0 %}
+        <section style="margin-top: 18px;">
+            <div style="font-size: 1.05rem; font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🟡</span> THANH TOÁN ĐANG CHỜ XÁC NHẬN ({{ pending_rooms | length }})
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for room in pending_rooms %}
+                <div class="card" style="border: 2px solid #fde68a; background-color: #fffbeb;">
+                    <div class="room-card-header">
+                        <span class="room-name" style="font-size: 1.15rem;">{{ room.room_number }}</span>
+                        <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                    </div>
+
+                    <div style="margin: 6px 0; font-size: 0.95rem;">
+                        <span style="color: var(--text-muted);">Số tiền đã báo CK:</span>
+                        <strong style="font-size: 1.2rem; color: var(--primary-color); margin-left: 6px;">
+                            {{ room.total_amount | currency }}
+                        </strong>
+                    </div>
+
+                    <form method="POST" action="/admin/payment/{{ room.id }}/approve">
+                        <button type="submit" class="btn btn-success" style="padding: 10px 14px; font-size: 0.95rem;">
+                            ✅ XÁC NHẬN ĐÃ NHẬN TIỀN
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- DANH SÁCH TẤT CẢ 6 PHÒNG -->
+        <section style="margin-top: 24px;">
+            <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">
+                📋 DANH SÁCH 6 PHÒNG
+            </div>
+            <main class="room-list">
+                {% for room in rooms %}
+                <div class="room-card">
+                    <div class="room-card-header">
+                        <span class="room-name">{{ room.room_number }}</span>
+                        {% if room.status == 'UNPAID' %}
+                            <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                        {% elif room.status == 'PENDING' %}
+                            <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                        {% elif room.status == 'PAID' %}
+                            <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Chi tiết các khoản phí -->
+                    <div class="admin-fee-details">
+                        <div class="fee-item">
+                            <span class="fee-label">Tiền phòng:</span>
+                            <span class="fee-value">{{ room.room_fee | currency }}</span>
+                        </div>
+                        <div class="fee-item">
+                            <span class="fee-label">Tiền điện:</span>
+                            <span class="fee-value">
+                                {{ room.electricity_fee | currency }}
+                                {% if room.electricity_units > 0 %}
+                                    <small style="color: var(--text-muted);">({{ room.electricity_units }} số)</small>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="fee-item">
+                            <span class="fee-label">Tiền nước:</span>
+                            <span class="fee-value">{{ room.water_fee | currency }}</span>
+                        </div>
+                        <div class="fee-item fee-total">
+                            <span class="fee-label" style="font-weight: 700;">TỔNG CỘNG:</span>
+                            <span class="fee-value" style="font-size: 1.15rem; color: var(--primary-color); font-weight: 800;">
+                                {{ room.total_amount | currency }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Nút thao tác quản lý phòng -->
+                    <div class="room-action">
+                        <a href="/admin/room/{{ room.id }}" class="btn btn-primary" style="padding: 10px 14px; font-size: 0.95rem;">
+                            ⚙️ Quản lý hóa đơn
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </main>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <a href="/">🏠 Xem giao diện người thuê (Trang chủ)</a>
+        </footer>
+    </div>
+</body>
+</html>

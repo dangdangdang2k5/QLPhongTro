@@ -1,0 +1,480 @@
+/* Reset và cấu hình cơ bản */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success-color: #16a34a;
+    --success-hover: #15803d;
+    --danger-color: #dc2626;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    
+    /* Màu sắc trạng thái */
+    --status-unpaid-bg: #fee2e2;
+    --status-unpaid-text: #b91c1c;
+    --status-pending-bg: #fef3c7;
+    --status-pending-text: #b45309;
+    --status-paid-bg: #dcfce7;
+    --status-paid-text: #15803d;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding: 16px;
+}
+
+.container {
+    max-width: 500px; /* Mobile-First */
+    margin: 0 auto;
+}
+
+/* Thẻ chung */
+.card, .room-card, .payment-card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+/* Header trang chủ */
+.header {
+    text-align: center;
+    padding: 20px 0 16px 0;
+}
+
+.header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Danh sách phòng */
+.room-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.room-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.room-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Badge trạng thái */
+.status-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-unpaid {
+    background-color: var(--status-unpaid-bg);
+    color: var(--status-unpaid-text);
+}
+
+.status-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-text);
+}
+
+.status-paid {
+    background-color: var(--status-paid-bg);
+    color: var(--status-paid-text);
+}
+
+/* Số tiền */
+.room-amount {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+/* Nút bấm */
+.btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: #ffffff;
+}
+
+.btn-success:hover {
+    background-color: var(--success-hover);
+}
+
+.btn-disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ===== Chi tiết phí Admin Dashboard ===== */
+.admin-fee-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+}
+
+.fee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fee-label {
+    color: var(--text-muted);
+}
+
+.fee-value {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.fee-total {
+    border-top: 1px dashed var(--border-color);
+    padding-top: 8px;
+    margin-top: 2px;
+}
+
+/* ===== Trang Thanh Toán ===== */
+.payment-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.payment-header {
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.payment-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.payment-period {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.payment-amount-box {
+    text-align: center;
+    margin: 8px 0;
+}
+
+.payment-amount-box .amount-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.payment-amount-box .amount-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.qr-image {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+}
+
+.qr-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    text-align: center;
+}
+
+.transfer-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.info-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.info-value-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-value {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.info-value.highlight {
+    color: var(--primary-color);
+    word-break: break-all;
+}
+
+.copy-btn {
+    background-color: #e2e8f0;
+    color: var(--text-main);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.copy-btn:hover {
+    background-color: #cbd5e1;
+}
+
+.copy-btn.copied {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.notice-box {
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.notice-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-text);
+    border: 1px solid #fde68a;
+}
+
+.notice-paid {
+    background-color: var(--status-paid-bg);
+    color: var(--status-paid-text);
+    border: 1px solid #bbf7d0;
+}
+
+/* Link quay lại */
+.back-link {
+    display: inline-block;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.back-link:hover {
+    color: var(--text-main);
+}
+
+/* ===== Form & Admin Styles ===== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: #ffffff;
+    color: var(--text-main);
+    transition: border-color 0.15s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.login-card {
+    margin-top: 20px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-icon {
+    font-size: 2.2rem;
+    margin-bottom: 6px;
+}
+
+.login-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.login-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.alert-error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-header h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.admin-header p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.btn-logout {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background-color 0.15s;
+}
+
+.btn-logout:hover {
+    background-color: #fca5a5;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 28px;
+    padding-bottom: 24px;
+}
+
+.footer a {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}

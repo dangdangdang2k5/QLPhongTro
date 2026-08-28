@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Nhập Quản Trị - Nhà Trọ</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="back-link">← Về trang chủ</a>
+
+      <div class="card login-card">
+        <div class="login-header">
+          <div class="login-icon">🔐</div>
+          <h1 class="login-title">ADMIN LOGIN</h1>
+          <p class="login-subtitle">
+            Đăng nhập hệ thống quản lý thu tiền phòng
+          </p>
+        </div>
+
+        {% if error %}
+        <div class="alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/admin" class="login-form">
+          <div class="form-group">
+            <label for="username" class="form-label">Tên đăng nhập:</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="form-input"
+              placeholder="Nhập username admin"
+              required
+              autofocus
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Mật khẩu:</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input"
+              placeholder="Nhập mật khẩu"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 8px">
+            Đăng nhập
+          </button>
+        </form>
+      </div>
+
+      <footer class="footer">
+        <p style="font-size: 0.8rem; color: var(--text-muted)">
+          Hệ thống quản trị nội bộ nhà trọ
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
