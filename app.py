@@ -1,10 +1,10 @@
 import os
 import urllib.parse
 from functools import wraps
-from flask import Flask, render_template, redirect, url_for, abort, request, session
+from flask import Flask, render_template, redirect, url_for, abort, request, session, jsonify
 from dotenv import load_dotenv
 from db import get_db, init_db
-from telegram_service import send_telegram_message, send_telegram_message_with_button
+from telegram_service import send_telegram_message, send_telegram_message_with_button, set_telegram_webhook
 
 # Load biến môi trường từ file .env (nếu chạy local)
 load_dotenv()
@@ -52,6 +52,33 @@ def currency_filter(value):
         return f"{int(value):,}".replace(",", ".") + "đ"
     except (ValueError, TypeError):
         return f"{value}đ"
+
+# ==========================================
+# TELEGRAM WEBHOOK (/start -> LẤY CHAT ID)
+# ==========================================
+
+@app.route('/telegram/webhook', methods=['POST'])
+def telegram_webhook():
+    """Webhook nhận tin nhắn từ Telegram Bot (khi người dùng gửi /start để lấy Chat ID)."""
+    data = request.get_json(silent=True) or {}
+    message = data.get('message') or data.get('edited_message')
+
+    if message:
+        chat = message.get('chat', {})
+        chat_id = chat.get('id')
+        text = (message.get('text') or '').strip()
+
+        if chat_id:
+            reply_text = (
+                "🏠 <b>QLPhongTro Bot</b>\n\n"
+                "Kết nối thành công!\n\n"
+                "Chat ID của bạn:\n"
+                f"<code>{chat_id}</code>\n\n"
+                "<i>(Hãy copy số Chat ID này và dán vào ADMIN_TELEGRAM_CHAT_ID trên Render nhé!)</i>"
+            )
+            send_telegram_message(chat_id=chat_id, message=reply_text)
+
+    return jsonify({'ok': True}), 200
 
 # ==========================================
 # ACCESS KEY & AUTH ROUTES (NGƯỜI THUÊ)
@@ -280,7 +307,7 @@ def admin_dashboard():
     rooms = cursor.fetchall()
     conn.close()
 
-    # Nhận thông báo test Telegram nếu có
+    # Nhận thông báo test Telegram / Webhook nếu có
     tg_status = request.args.get('tg_status')
 
     return render_template(
@@ -290,6 +317,19 @@ def admin_dashboard():
         payment_year=PAYMENT_YEAR,
         tg_status=tg_status
     )
+
+@app.route('/admin/set-telegram-webhook', methods=['POST'])
+@admin_required
+def admin_set_telegram_webhook():
+    """Đăng ký Webhook tự động với Telegram để Bot nhận lệnh /start."""
+    app_url = os.getenv('APP_BASE_URL', '').rstrip('/')
+    if not app_url:
+        return redirect(url_for('admin_dashboard', tg_status='no_app_url'))
+
+    webhook_url = f"{app_url}/telegram/webhook"
+    success = set_telegram_webhook(webhook_url)
+    status = 'webhook_success' if success else 'webhook_failed'
+    return redirect(url_for('admin_dashboard', tg_status=status))
 
 @app.route('/admin/test-telegram', methods=['POST'])
 @admin_required

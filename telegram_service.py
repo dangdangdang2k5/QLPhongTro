@@ -74,6 +74,24 @@ def send_telegram_message_with_button(chat_id, message, button_text, button_url,
 
     return _execute_telegram_request(url, payload)
 
+def set_telegram_webhook(webhook_url):
+    """
+    Dang ky Webhook voi Telegram de nhan tin nhan /start tu dong.
+    
+    :param webhook_url: URL cong khai cua webhook (vi du: https://qlphongtro-j7mw.onrender.com/telegram/webhook)
+    :return: True neu dang ky thanh cong, False neu that bai
+    """
+    bot_token = get_bot_token()
+    if not bot_token:
+        print('[Telegram] TELEGRAM_BOT_TOKEN chua duoc cau hinh.')
+        return False
+
+    url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
+    payload = {
+        'url': webhook_url
+    }
+    return _execute_telegram_request(url, payload)
+
 def _execute_telegram_request(url, payload):
     """Thuc thi HTTP POST request den Telegram API mot cach an toan (khong log Token)."""
     try:
@@ -86,7 +104,7 @@ def _execute_telegram_request(url, payload):
         with urllib.request.urlopen(req, timeout=10) as response:
             res_data = json.loads(response.read().decode('utf-8'))
             if res_data.get('ok'):
-                print('[Telegram] Telegram notification sent successfully.')
+                print('[Telegram] Telegram request executed successfully.')
                 return True
             else:
                 desc = res_data.get('description', 'Unknown Telegram API error')
@@ -104,5 +122,5 @@ def _execute_telegram_request(url, payload):
         print(f'[Telegram] Network / URL Error: {e.reason}')
         return False
     except Exception as e:
-        print(f'[Telegram] Loi ngoai le khi gui tin nhan: {type(e).__name__}')
+        print(f'[Telegram] Loi ngoai le khi gui request: {type(e).__name__}')
         return False

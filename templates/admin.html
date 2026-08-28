@@ -17,7 +17,7 @@
             <a href="/admin/logout" class="btn-logout">Đăng xuất</a>
         </header>
 
-        <!-- Thông báo kết quả Test Telegram nếu có -->
+        <!-- Thông báo kết quả Test Telegram / Webhook nếu có -->
         {% if tg_status == 'success' %}
         <div class="notice-box notice-paid" style="margin-top: 14px;">
             ✅ <strong>Đã gửi tin nhắn test Telegram thành công!</strong><br>
@@ -31,7 +31,22 @@
         {% elif tg_status == 'no_chat_id' %}
         <div class="alert-error" style="margin-top: 14px;">
             ⚠️ <strong>Chưa cấu hình ADMIN_TELEGRAM_CHAT_ID!</strong><br>
-            Vui lòng thêm biến <code>ADMIN_TELEGRAM_CHAT_ID</code> vào Render Environment Variables.
+            Hãy gửi tin nhắn <code>/start</code> cho bot <strong>@PhongTroMH_bot</strong> để lấy Chat ID, sau đó thêm vào Render.
+        </div>
+        {% elif tg_status == 'webhook_success' %}
+        <div class="notice-box notice-paid" style="margin-top: 14px;">
+            🔗 <strong>Đã kích hoạt Webhook Telegram thành công!</strong><br>
+            Bây giờ bạn có thể mở Bot <strong>@PhongTroMH_bot</strong> trên Telegram và gửi <code>/start</code> để lấy Chat ID.
+        </div>
+        {% elif tg_status == 'webhook_failed' %}
+        <div class="alert-error" style="margin-top: 14px;">
+            ❌ <strong>Kích hoạt Webhook thất bại!</strong><br>
+            Vui lòng kiểm tra lại <code>TELEGRAM_BOT_TOKEN</code> và <code>APP_BASE_URL</code> trên Render.
+        </div>
+        {% elif tg_status == 'no_app_url' %}
+        <div class="alert-error" style="margin-top: 14px;">
+            ⚠️ <strong>Chưa cấu hình APP_BASE_URL!</strong><br>
+            Vui lòng thêm biến <code>APP_BASE_URL</code> (ví dụ: <code>https://qlphongtro-j7mw.onrender.com</code>) trên Render.
         </div>
         {% endif %}
 
@@ -163,13 +178,20 @@
                     <span>🤖</span> THÔNG BÁO TELEGRAM BOT
                 </div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-                    Bot tự động gửi tin nhắn kèm nút bấm duyệt khi có người thuê báo chuyển khoản.
+                    Nhận thông báo kèm nút duyệt ngay khi có người thuê chuyển khoản, và hỗ trợ lệnh <code>/start</code> để lấy Chat ID tự động.
                 </p>
-                <form method="POST" action="/admin/test-telegram">
-                    <button type="submit" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.85rem; background-color: #0284c7;">
-                        📨 Gửi tin nhắn Test kết nối Bot
-                    </button>
-                </form>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <form method="POST" action="/admin/set-telegram-webhook">
+                        <button type="submit" class="btn btn-primary" style="padding: 9px 14px; font-size: 0.85rem; background-color: #6366f1;">
+                            🔗 Kích hoạt Webhook (để Bot tự trả lời /start lấy Chat ID)
+                        </button>
+                    </form>
+                    <form method="POST" action="/admin/test-telegram">
+                        <button type="submit" class="btn btn-primary" style="padding: 9px 14px; font-size: 0.85rem; background-color: #0284c7;">
+                            📨 Gửi tin nhắn Test kết nối Bot
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
