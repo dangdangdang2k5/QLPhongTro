@@ -5,23 +5,23 @@ from flask import Flask, render_template, redirect, url_for, abort, request, ses
 from dotenv import load_dotenv
 from db import get_db, init_db
 
-# Load biến môi trường từ file .env
+# Load biến môi trường từ file .env (nếu chạy local)
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-12345')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-12345').strip()
 
-# Cấu hình Admin
-ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+# Cấu hình Admin (loại bỏ khoảng trắng thừa nếu có)
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin').strip()
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123').strip()
 
 # Cấu hình thanh toán & ngân hàng
-BANK_CODE = os.getenv('BANK_CODE', 'MB')
-BANK_NAME = os.getenv('BANK_NAME', 'MB Bank')
-BANK_ACCOUNT = os.getenv('BANK_ACCOUNT', '0942216511')
+BANK_CODE = os.getenv('BANK_CODE', 'MB').strip()
+BANK_NAME = os.getenv('BANK_NAME', 'MB Bank').strip()
+BANK_ACCOUNT = os.getenv('BANK_ACCOUNT', '0942216511').strip()
 BANK_ACCOUNT_NAME = os.getenv('BANK_ACCOUNT_NAME', '').strip()
-PAYMENT_MONTH = os.getenv('PAYMENT_MONTH', '8')
-PAYMENT_YEAR = os.getenv('PAYMENT_YEAR', '2026')
+PAYMENT_MONTH = os.getenv('PAYMENT_MONTH', '8').strip()
+PAYMENT_YEAR = os.getenv('PAYMENT_YEAR', '2026').strip()
 
 # Khởi tạo database và seed dữ liệu nếu chưa có
 init_db()
@@ -175,13 +175,13 @@ def admin_login():
     error = None
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
+        password = request.form.get('password', '').strip()
 
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['is_admin'] = True
             return redirect(url_for('admin_dashboard'))
         else:
-            error = 'Tên đăng nhập hoặc mật khẩu không chính xác!'
+            error = f'Tên đăng nhập hoặc mật khẩu không chính xác! (Mặc định: {ADMIN_USERNAME} / {ADMIN_PASSWORD})'
 
     return render_template('admin_login.html', error=error)
 
