@@ -318,6 +318,25 @@ def admin_dashboard():
         tg_status=tg_status
     )
 
+@app.route('/admin/payment/<int:room_id>/set-status', methods=['POST'])
+@admin_required
+def set_payment_status(room_id):
+    """Admin chuyển đổi linh hoạt giữa 3 chế độ: UNPAID, PENDING, PAID."""
+    new_status = request.form.get('status', '').strip().upper()
+    if new_status not in ['UNPAID', 'PENDING', 'PAID']:
+        new_status = 'UNPAID'
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE payments 
+        SET status = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE room_id = ? AND payment_month = ? AND payment_year = ?
+    ''', (new_status, room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/admin/set-telegram-webhook', methods=['POST'])
 @admin_required
 def admin_set_telegram_webhook():
@@ -357,7 +376,7 @@ def admin_test_telegram():
 @app.route('/admin/room/<int:room_id>', methods=['GET', 'POST'])
 @admin_required
 def admin_room_detail(room_id):
-    """Admin nhập và chỉnh sửa thông tin tiền phòng, số điện, đơn giá, tiền nước."""
+    """Admin nhập và chỉnh sửa thông tin tiền phòng, số điện, đơn giá, tiền nước và trạng thái."""
     conn = get_db()
     cursor = conn.cursor()
 
@@ -383,22 +402,43 @@ def admin_room_detail(room_id):
         electricity_fee = electricity_units * electricity_price
         total_amount = room_fee + electricity_fee + water_fee
 
-        # Lưu thông tin hóa đơn vào SQLite (giữ nguyên trạng thái status hiện tại)
-        cursor.execute('''
-            UPDATE payments 
-            SET room_fee = ?,
-                electricity_units = ?,
-                electricity_price = ?,
-                electricity_fee = ?,
-                water_fee = ?,
-                total_amount = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE room_id = ? AND payment_month = ? AND payment_year = ?
-        ''', (
-            room_fee, electricity_units, electricity_price,
-            electricity_fee, water_fee, total_amount,
-            room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)
-        ))
+        # Nhận trạng thái được chọn (UNPAID / PENDING / PAID)
+        selected_status = request.form.get('status', '').strip().upper()
+        if selected_status in ['UNPAID', 'PENDING', 'PAID']:
+            cursor.execute('''
+                UPDATE payments 
+                SET room_fee = ?,
+                    electricity_units = ?,
+                    electricity_price = ?,
+                    electricity_fee = ?,
+                    water_fee = ?,
+                    total_amount = ?,
+                    status = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE room_id = ? AND payment_month = ? AND payment_year = ?
+            ''', (
+                room_fee, electricity_units, electricity_price,
+                electricity_fee, water_fee, total_amount, selected_status,
+                room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)
+            ))
+        else:
+            # Nếu không truyền status thì giữ nguyên status cũ
+            cursor.execute('''
+                UPDATE payments 
+                SET room_fee = ?,
+                    electricity_units = ?,
+                    electricity_price = ?,
+                    electricity_fee = ?,
+                    water_fee = ?,
+                    total_amount = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE room_id = ? AND payment_month = ? AND payment_year = ?
+            ''', (
+                room_fee, electricity_units, electricity_price,
+                electricity_fee, water_fee, total_amount,
+                room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)
+            ))
+
         conn.commit()
         conn.close()
         return redirect(url_for('admin_dashboard'))
@@ -429,27 +469,15 @@ def admin_room_detail(room_id):
 @app.route('/admin/payment/<int:room_id>/approve', methods=['POST'])
 @admin_required
 def approve_payment(room_id):
-    """Admin xác nhận đã nhận tiền trong tài khoản MB Bank -> chuyển PENDING sang PAID."""
+    """Admin xác nhận đã nhận tiền trong tài khoản MB Bank -> chuyển sang PAID."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, status FROM payments 
+        UPDATE payments 
+        SET status = 'PAID', updated_at = CURRENT_TIMESTAMP 
         WHERE room_id = ? AND payment_month = ? AND payment_year = ?
     ''', (room_id, int(PAYMENT_MONTH), int(PAYMENT_YEAR)))
-    payment_rec = cursor.fetchone()
-
-    if payment_rec is None:
-        conn.close()
-        abort(404)
-
-    # Kiểm tra bảo mật: chỉ cho phép duyệt khi trạng thái thực sự là PENDING
-    if payment_rec['status'] == 'PENDING':
-        cursor.execute(
-            "UPDATE payments SET status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (payment_rec['id'],)
-        )
-        conn.commit()
-
+    conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
 

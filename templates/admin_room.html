@@ -18,26 +18,8 @@
                 <div class="payment-period">Kỳ thanh toán: Tháng {{ payment_month }}/{{ payment_year }}</div>
             </div>
 
-            <!-- Trạng thái phòng hiện tại -->
-            <div style="text-align: center;">
-                {% if room.status == 'UNPAID' %}
-                    <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
-                {% elif room.status == 'PENDING' %}
-                    <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
-                {% elif room.status == 'PAID' %}
-                    <span class="status-badge status-paid">🟢 Đã thanh toán</span>
-                {% endif %}
-            </div>
-
-            <!-- Cảnh báo nếu phòng đã thanh toán -->
-            {% if room.status == 'PAID' %}
-            <div class="alert-warning" style="background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 0.9rem; margin-top: 4px;">
-                ⚠️ <strong>Lưu ý:</strong> Bạn đang chỉnh sửa một hóa đơn <strong>ĐÃ THANH TOÁN</strong>. Trạng thái ĐÃ THANH TOÁN sẽ được giữ nguyên sau khi lưu (trừ khi bạn dùng chức năng Reset).
-            </div>
-            {% endif %}
-
-            <!-- Form cập nhật hóa đơn -->
-            <form method="POST" action="/admin/room/{{ room.id }}" id="invoiceForm" {% if room.status == 'PAID' %}onsubmit="return confirm('Phòng này đã thanh toán. Bạn có chắc chắn muốn lưu thay đổi hóa đơn không?');"{% endif %}>
+            <!-- Form cập nhật hóa đơn & trạng thái -->
+            <form method="POST" action="/admin/room/{{ room.id }}" id="invoiceForm">
                 <!-- 1. Tiền phòng -->
                 <div class="form-group">
                     <label for="room_fee" class="form-label">1. Tiền phòng (VNĐ):</label>
@@ -72,6 +54,25 @@
                            value="{{ room.water_fee }}" min="0" step="5000" placeholder="Nhập tiền nước" required>
                 </div>
 
+                <!-- 4. Trạng thái thanh toán (3 Chế độ) -->
+                <div class="form-group">
+                    <label for="status" class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>4. Trạng thái thanh toán:</span>
+                        <span style="font-size: 0.8rem; color: var(--primary-color); font-weight: normal;">(Admin tùy chỉnh)</span>
+                    </label>
+                    <select id="status" name="status" class="form-input" style="font-weight: 700; padding: 10px 12px; cursor: pointer;">
+                        <option value="UNPAID" {% if room.status == 'UNPAID' %}selected{% endif %}>
+                            🔴 Chưa thanh toán (UNPAID)
+                        </option>
+                        <option value="PENDING" {% if room.status == 'PENDING' %}selected{% endif %}>
+                            🟡 Đang chờ duyệt (PENDING)
+                        </option>
+                        <option value="PAID" {% if room.status == 'PAID' %}selected{% endif %}>
+                            🟢 Đã thanh toán (PAID)
+                        </option>
+                    </select>
+                </div>
+
                 <!-- Bảng tổng kết tiền tự động -->
                 <div class="admin-fee-details" style="margin: 16px 0;">
                     <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">BẢNG TỔNG HỢP HÓA ĐƠN</div>
@@ -97,7 +98,7 @@
 
                 <!-- Nút lưu hóa đơn -->
                 <button type="submit" class="btn btn-primary" style="font-size: 1.05rem; padding: 14px;">
-                    💾 LƯU HÓA ĐƠN
+                    💾 LƯU HÓA ĐƠN & TRẠNG THÁI
                 </button>
             </form>
         </div>

@@ -55,7 +55,7 @@
         {% if pending_rooms | length > 0 %}
         <section style="margin-top: 18px;">
             <div style="font-size: 1.05rem; font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                <span>🟡</span> THANH TOÁN ĐANG CHỜ XÁC NHẬN ({{ pending_rooms | length }})
+                <span>🟡</span> THANH TOÁN ĐANG CHỜ DUYỆT ({{ pending_rooms | length }})
             </div>
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 {% for room in pending_rooms %}
@@ -75,13 +75,13 @@
                     <div style="display: flex; gap: 8px; margin-top: 4px;">
                         <form method="POST" action="/admin/payment/{{ room.id }}/approve" style="flex: 1;">
                             <button type="submit" class="btn btn-success" style="padding: 10px 12px; font-size: 0.9rem;">
-                                ✅ XÁC NHẬN ĐÃ NHẬN TIỀN
+                                ✅ DUYỆT ĐÃ NHẬN TIỀN
                             </button>
                         </form>
-                        <form method="POST" action="/admin/payment/{{ room.id }}/reset" 
-                              onsubmit="return confirm('Bạn có chắc chắn muốn reset trạng thái của {{ room.room_number }} về Chưa thanh toán không?');">
+                        <form method="POST" action="/admin/payment/{{ room.id }}/set-status" style="flex: 1;">
+                            <input type="hidden" name="status" value="UNPAID">
                             <button type="submit" class="btn btn-outline-danger" style="padding: 10px 12px; font-size: 0.9rem; white-space: nowrap;">
-                                🔄 Reset
+                                🔴 Chưa thanh toán
                             </button>
                         </form>
                     </div>
@@ -104,7 +104,7 @@
                         {% if room.status == 'UNPAID' %}
                             <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
                         {% elif room.status == 'PENDING' %}
-                            <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                            <span class="status-badge status-pending">🟡 Đang chờ duyệt</span>
                         {% elif room.status == 'PAID' %}
                             <span class="status-badge status-paid">🟢 Đã thanh toán</span>
                         {% endif %}
@@ -137,34 +137,23 @@
                         </div>
                     </div>
 
-                    <!-- Các nút thao tác theo từng trạng thái -->
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-                        <a href="/admin/room/{{ room.id }}" class="btn btn-primary" style="padding: 10px 14px; font-size: 0.95rem;">
-                            ✏️ Cập nhật hóa đơn
-                        </a>
-
-                        {% if room.status == 'PENDING' %}
-                        <div style="display: flex; gap: 8px;">
-                            <form method="POST" action="/admin/payment/{{ room.id }}/approve" style="flex: 1;">
-                                <button type="submit" class="btn btn-success" style="padding: 10px 14px; font-size: 0.9rem;">
-                                    ✅ Xác nhận đã nhận tiền
-                                </button>
-                            </form>
-                            <form method="POST" action="/admin/payment/{{ room.id }}/reset" 
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn reset trạng thái của {{ room.room_number }} về Chưa thanh toán không? (Dữ liệu hóa đơn sẽ được giữ nguyên)');">
-                                <button type="submit" class="btn btn-outline-danger" style="padding: 10px 12px; font-size: 0.9rem; white-space: nowrap;">
-                                    🔄 Reset
-                                </button>
-                            </form>
+                    <!-- Chuyển đổi nhanh 3 chế độ -->
+                    <form method="POST" action="/admin/payment/{{ room.id }}/set-status" style="margin-top: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 6px 10px; border-radius: 8px;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Chuyển chế độ:</span>
+                            <select name="status" class="form-input" style="width: auto; padding: 6px 10px; font-size: 0.85rem; font-weight: 700; background: #fff; cursor: pointer; border-radius: 6px;" onchange="this.form.submit()">
+                                <option value="UNPAID" {% if room.status == 'UNPAID' %}selected{% endif %}>🔴 Chưa thanh toán</option>
+                                <option value="PENDING" {% if room.status == 'PENDING' %}selected{% endif %}>🟡 Đang chờ duyệt</option>
+                                <option value="PAID" {% if room.status == 'PAID' %}selected{% endif %}>🟢 Đã thanh toán</option>
+                            </select>
                         </div>
-                        {% elif room.status == 'PAID' %}
-                        <form method="POST" action="/admin/payment/{{ room.id }}/reset" 
-                              onsubmit="return confirm('Bạn có chắc chắn muốn reset trạng thái của {{ room.room_number }} về Chưa thanh toán không? (Dữ liệu hóa đơn sẽ được giữ nguyên)');">
-                            <button type="submit" class="btn btn-outline-danger" style="padding: 9px 14px; font-size: 0.9rem;">
-                                🔄 Reset trạng thái (Về Chưa thanh toán)
-                            </button>
-                        </form>
-                        {% endif %}
+                    </form>
+
+                    <!-- Nút chỉnh sửa chi tiết hóa đơn -->
+                    <div style="margin-top: 4px;">
+                        <a href="/admin/room/{{ room.id }}" class="btn btn-primary" style="padding: 10px 14px; font-size: 0.95rem;">
+                            ✏️ Cập nhật hóa đơn & trạng thái
+                        </a>
                     </div>
                 </div>
                 {% endfor %}
