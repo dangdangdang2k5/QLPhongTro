@@ -11,9 +11,6 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = (os.getenv('FLASK_SECRET_KEY') or os.getenv('SECRET_KEY', 'dev-secret-key-12345')).strip()
 
-# Cấu hình Access Key cho người thuê
-SITE_ACCESS_KEY = os.getenv('SITE_ACCESS_KEY', 'PhongTroMinhHai').strip()
-
 # Cấu hình Admin
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin').strip()
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123').strip()
@@ -68,7 +65,10 @@ def site_access():
     error = None
     if request.method == 'POST':
         key_input = request.form.get('access_key', '').strip()
-        if key_input == SITE_ACCESS_KEY:
+        # Đọc Access Key động từ Environment Variable
+        site_access_key = os.getenv('SITE_ACCESS_KEY', '').strip()
+
+        if site_access_key and key_input == site_access_key:
             session['site_authorized'] = True
             return redirect(url_for('home'))
         else:
