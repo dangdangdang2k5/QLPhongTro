@@ -4,6 +4,7 @@ from functools import wraps
 from flask import Flask, render_template, redirect, url_for, abort, request, session
 from dotenv import load_dotenv
 from db import get_db, init_db
+from telegram_service import send_telegram_message, send_telegram_message_with_button
 
 # Load biến môi trường từ file .env (nếu chạy local)
 load_dotenv()
@@ -181,7 +182,7 @@ def payment(room_id):
 @app.route('/payment/<int:room_id>/confirm', methods=['POST'])
 @tenant_required
 def confirm_payment(room_id):
-    """Người thuê bấm 'Tôi đã chuyển khoản' -> chuyển trạng thái UNPAID sang PENDING."""
+    """Người thuê bấm 'Tôi đã chuyển khoản' -> chuyển trạng thái UNPAID sang PENDING và gửi thông báo Telegram."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
@@ -201,6 +202,39 @@ def confirm_payment(room_id):
             (payment_rec['id'],)
         )
         conn.commit()
+
+        # Gửi thông báo tự động qua Telegram cho Admin
+        admin_chat_id = os.getenv('ADMIN_TELEGRAM_CHAT_ID', '').strip()
+        if admin_chat_id:
+            cursor.execute('''
+                SELECT r.room_number, p.total_amount 
+                FROM rooms r
+                JOIN payments p ON r.id = p.room_id 
+                     AND p.payment_month = ? AND p.payment_year = ?
+                WHERE r.id = ?
+            ''', (int(PAYMENT_MONTH), int(PAYMENT_YEAR), room_id))
+            detail = cursor.fetchone()
+
+            if detail:
+                formatted_amount = f"{detail['total_amount']:,}".replace(",", ".") + "đ"
+                transfer_msg = f"TIEN PHONG {room_id} THANG {PAYMENT_MONTH}/{PAYMENT_YEAR}"
+                app_url = os.getenv('APP_BASE_URL', 'http://127.0.0.1:5000').rstrip('/')
+                admin_dashboard_url = f"{app_url}/admin"
+
+                tg_message = (
+                    f"🔔 <b>THÔNG BÁO CHUYỂN KHOẢN MỚI</b>\n\n"
+                    f"🏠 <b>Phòng:</b> {detail['room_number']}\n"
+                    f"💰 <b>Số tiền:</b> {formatted_amount}\n"
+                    f"📅 <b>Kỳ:</b> Tháng {PAYMENT_MONTH}/{PAYMENT_YEAR}\n"
+                    f"📝 <b>Nội dung CK:</b> <code>{transfer_msg}</code>\n\n"
+                    f"⚡ <i>Người thuê đã bấm 'Tôi đã chuyển khoản'. Vui lòng kiểm tra tài khoản MB Bank và duyệt thanh toán!</i>"
+                )
+                send_telegram_message_with_button(
+                    chat_id=admin_chat_id,
+                    message=tg_message,
+                    button_text="🔍 Mở Dashboard Duyệt",
+                    button_url=admin_dashboard_url
+                )
 
     conn.close()
     return redirect(url_for('payment', room_id=room_id))
@@ -246,12 +280,39 @@ def admin_dashboard():
     rooms = cursor.fetchall()
     conn.close()
 
+    # Nhận thông báo test Telegram nếu có
+    tg_status = request.args.get('tg_status')
+
     return render_template(
         'admin.html',
         rooms=rooms,
         payment_month=PAYMENT_MONTH,
-        payment_year=PAYMENT_YEAR
+        payment_year=PAYMENT_YEAR,
+        tg_status=tg_status
     )
+
+@app.route('/admin/test-telegram', methods=['POST'])
+@admin_required
+def admin_test_telegram():
+    """Gửi tin nhắn test kết nối Telegram Bot."""
+    admin_chat_id = os.getenv('ADMIN_TELEGRAM_CHAT_ID', '').strip()
+    if not admin_chat_id:
+        return redirect(url_for('admin_dashboard', tg_status='no_chat_id'))
+
+    app_url = os.getenv('APP_BASE_URL', 'http://127.0.0.1:5000').rstrip('/')
+    test_msg = (
+        "🔔 <b>QL PHÒNG TRỌ</b>\n\n"
+        "🎉 <b>Telegram Bot đã kết nối thành công!</b>\n"
+        "Từ bây giờ bạn sẽ nhận được thông báo ngay khi có người thuê bấm 'Tôi đã chuyển khoản'."
+    )
+    success = send_telegram_message_with_button(
+        chat_id=admin_chat_id,
+        message=test_msg,
+        button_text="🏠 Mở Website Quản Trị",
+        button_url=f"{app_url}/admin"
+    )
+    status = 'success' if success else 'failed'
+    return redirect(url_for('admin_dashboard', tg_status=status))
 
 @app.route('/admin/room/<int:room_id>', methods=['GET', 'POST'])
 @admin_required

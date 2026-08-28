@@ -17,6 +17,24 @@
             <a href="/admin/logout" class="btn-logout">Đăng xuất</a>
         </header>
 
+        <!-- Thông báo kết quả Test Telegram nếu có -->
+        {% if tg_status == 'success' %}
+        <div class="notice-box notice-paid" style="margin-top: 14px;">
+            ✅ <strong>Đã gửi tin nhắn test Telegram thành công!</strong><br>
+            Hãy mở ứng dụng Telegram để kiểm tra thông báo từ Bot.
+        </div>
+        {% elif tg_status == 'failed' %}
+        <div class="alert-error" style="margin-top: 14px;">
+            ❌ <strong>Gửi tin nhắn Telegram thất bại!</strong><br>
+            Vui lòng kiểm tra lại <code>TELEGRAM_BOT_TOKEN</code> và <code>ADMIN_TELEGRAM_CHAT_ID</code> trên Render (hoặc file .env).
+        </div>
+        {% elif tg_status == 'no_chat_id' %}
+        <div class="alert-error" style="margin-top: 14px;">
+            ⚠️ <strong>Chưa cấu hình ADMIN_TELEGRAM_CHAT_ID!</strong><br>
+            Vui lòng thêm biến <code>ADMIN_TELEGRAM_CHAT_ID</code> vào Render Environment Variables.
+        </div>
+        {% endif %}
+
         <!-- KHU VỰC 1: THANH TOÁN ĐANG CHỜ XÁC NHẬN -->
         {% set pending_rooms = rooms | selectattr('status', 'equalto', 'PENDING') | list %}
         {% if pending_rooms | length > 0 %}
@@ -136,6 +154,23 @@
                 </div>
                 {% endfor %}
             </main>
+        </section>
+
+        <!-- KHU VỰC 3: CÀI ĐẶT TELEGRAM BOT NOTIFICATION -->
+        <section style="margin-top: 24px;">
+            <div class="card" style="background-color: #f8fafc; border: 1px dashed var(--border-color); padding: 16px;">
+                <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🤖</span> THÔNG BÁO TELEGRAM BOT
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Bot tự động gửi tin nhắn kèm nút bấm duyệt khi có người thuê báo chuyển khoản.
+                </p>
+                <form method="POST" action="/admin/test-telegram">
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.85rem; background-color: #0284c7;">
+                        📨 Gửi tin nhắn Test kết nối Bot
+                    </button>
+                </form>
+            </div>
         </section>
 
         <!-- Footer -->
