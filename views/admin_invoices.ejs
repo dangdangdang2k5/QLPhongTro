@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Top Navbar -->
+        <header class="admin-navbar">
+            <div>
+                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);">
+                    📋 QUẢN LÝ LỊCH SỬ HÓA ĐƠN
+                </h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                    Tra cứu, lọc và xuất hóa đơn các kỳ thanh toán
+                </p>
+            </div>
+            <nav class="admin-nav-links">
+                <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+                <a href="/admin/rooms" class="admin-nav-link">Quản Lý Phòng</a>
+                <a href="/admin/invoices" class="admin-nav-link active">Hóa Đơn</a>
+                <a href="/admin/logout" class="btn-logout" style="background: #fee2e2; color: #b91c1c; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+                    Đăng xuất 🚪
+                </a>
+            </nav>
+        </header>
+
+        <!-- Form Bộ Lọc & Tìm Kiếm -->
+        <div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+            <form method="GET" action="/admin/invoices" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) 120px; gap: 12px; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Chọn phòng:</label>
+                    <select name="room_id" class="form-input">
+                        <option value="">-- Tất cả phòng --</option>
+                        <% rooms.forEach(r => { %>
+                            <option value="<%= r.id %>" <%= filters.room_id == r.id ? 'selected' : '' %>><%= r.room_number %></option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Tháng:</label>
+                    <select name="month" class="form-input">
+                        <option value="">-- Tất cả --</option>
+                        <% for (let m = 1; m <= 12; m++) { %>
+                            <option value="<%= m %>" <%= filters.month == m ? 'selected' : '' %>>Tháng <%= m %></option>
+                        <% } %>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Năm:</label>
+                    <input type="number" name="year" class="form-input" value="<%= filters.year || '' %>" placeholder="Ví dụ: 2026">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Trạng thái:</label>
+                    <select name="status" class="form-input">
+                        <option value="">-- Tất cả --</option>
+                        <option value="UNPAID" <%= filters.status === 'UNPAID' ? 'selected' : '' %>>🔴 Chưa thanh toán</option>
+                        <option value="PENDING" <%= filters.status === 'PENDING' ? 'selected' : '' %>>🟡 Chờ duyệt</option>
+                        <option value="PAID" <%= filters.status === 'PAID' ? 'selected' : '' %>>🟢 Đã thanh toán</option>
+                        <option value="OVERDUE" <%= filters.status === 'OVERDUE' ? 'selected' : '' %>>🟣 Quá hạn</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="padding: 10px; font-size: 0.9rem;">
+                    🔍 Lọc dữ liệu
+                </button>
+            </form>
+        </div>
+
+        <!-- Bảng Dữ Liệu Hóa Đơn -->
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Phòng</th>
+                        <th>Kỳ</th>
+                        <th>Tiền Phòng</th>
+                        <th>Điện (Số)</th>
+                        <th>Tiền Nước</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (invoices.length === 0) { %>
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            Không tìm thấy hóa đơn nào phù hợp với điều kiện lọc.
+                        </td>
+                    </tr>
+                    <% } %>
+
+                    <% invoices.forEach(inv => { %>
+                    <tr>
+                        <td><code><%= inv.invoice_code %></code></td>
+                        <td><strong><%= inv.room_number %></strong></td>
+                        <td><%= inv.payment_month %>/<%= inv.payment_year %></td>
+                        <td><%= formatCurrency(inv.room_fee) %></td>
+                        <td><%= inv.electricity_units %> số (<%= formatCurrency(inv.electricity_fee) %>)</td>
+                        <td><%= formatCurrency(inv.water_fee) %></td>
+                        <td style="font-weight: 800; color: var(--primary-color);"><%= formatCurrency(inv.total_amount) %></td>
+                        <td>
+                            <% if (inv.status === 'UNPAID') { %>
+                                <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                            <% } else if (inv.status === 'PENDING') { %>
+                                <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                            <% } else if (inv.status === 'PAID') { %>
+                                <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                            <% } else if (inv.status === 'OVERDUE') { %>
+                                <span class="status-badge status-overdue">🟣 Quá hạn</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/admin/room/<%= inv.room_id %>?month=<%= inv.payment_month %>&year=<%= inv.payment_year %>" class="btn btn-primary" style="width: auto; padding: 4px 8px; font-size: 0.8rem;" title="Sửa">
+                                    ✏️
+                                </a>
+                                <a href="/invoice/<%= inv.id %>/pdf" target="_blank" class="btn btn-outline-danger" style="color: #475569; border-color: #cbd5e1; width: auto; padding: 4px 8px; font-size: 0.8rem;" title="Xuất PDF">
+                                    📄
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="footer">
+            <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        </footer>
+    </div>
+</body>
+</html>

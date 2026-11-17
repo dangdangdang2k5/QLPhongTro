@@ -1,0 +1,35 @@
+{
+  "name": "qlphongtro-pro",
+  "version": "2.0.0",
+  "description": "Room Management System - QLPhongTro PRO (Node.js, Express, MySQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node database/migrate.js",
+    "test": "node tests/test_runner.js"
+  },
+  "keywords": [
+    "room-management",
+    "vietqr",
+    "telegram-bot",
+    "express",
+    "mysql"
+  ],
+  "author": "QLPhongTro Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "mysql2": "^3.11.4",
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

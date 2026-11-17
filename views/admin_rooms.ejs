@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Top Navbar -->
+        <header class="admin-navbar">
+            <div>
+                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);">
+                    🏢 QUẢN LÝ DANH SÁCH PHÒNG
+                </h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                    Thêm, cập nhật giá thuê và trạng thái các phòng trọ
+                </p>
+            </div>
+            <nav class="admin-nav-links">
+                <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+                <a href="/admin/rooms" class="admin-nav-link active">Quản Lý Phòng</a>
+                <a href="/admin/invoices" class="admin-nav-link">Hóa Đơn</a>
+                <a href="/admin/logout" class="btn-logout" style="background: #fee2e2; color: #b91c1c; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+                    Đăng xuất 🚪
+                </a>
+            </nav>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
+            <!-- Cột trái: Form Thêm Phòng Mới -->
+            <div class="card">
+                <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 14px;">➕ Thêm Phòng Mới</h2>
+                <form method="POST" action="/admin/rooms">
+                    <div class="form-group">
+                        <label for="room_number" class="form-label">Tên phòng:</label>
+                        <input type="text" id="room_number" name="room_number" class="form-input" placeholder="Ví dụ: Phòng 7" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="base_price" class="form-label">Giá thuê cơ bản (VNĐ):</label>
+                        <input type="number" id="base_price" name="base_price" class="form-input" value="2000000" min="0" step="50000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status" class="form-label">Trạng thái phòng:</label>
+                        <select id="status" name="status" class="form-input">
+                            <option value="OCCUPIED">Đang có người thuê (OCCUPIED)</option>
+                            <option value="VACANT">Phòng trống (VACANT)</option>
+                            <option value="MAINTENANCE">Đang sửa chữa (MAINTENANCE)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="current_tenant_id" class="form-label">Gán khách thuê (Tùy chọn):</label>
+                        <select id="current_tenant_id" name="current_tenant_id" class="form-input">
+                            <option value="">-- Chưa gán khách --</option>
+                            <% tenants.forEach(t => { %>
+                                <option value="<%= t.id %>"><%= t.full_name %> (<%= t.username %>)</option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        LƯU PHÒNG MỚI
+                    </button>
+                </form>
+            </div>
+
+            <!-- Cột phải: Bảng Danh Sách Phòng -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 style="font-size: 1.1rem; font-weight: 700;">Danh Sách Hiện Có (<%= rooms.length %> phòng)</h2>
+                    <input type="text" id="searchRoom" class="form-input" style="max-width: 240px; padding: 6px 12px; font-size: 0.85rem;" 
+                           placeholder="🔍 Tìm kiếm phòng..." onkeyup="filterTable('searchRoom', 'roomsTable')">
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table" id="roomsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên Phòng</th>
+                                <th>Giá Thuê Gốc</th>
+                                <th>Trạng Thái</th>
+                                <th>Khách Thuê</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% rooms.forEach(room => { %>
+                            <tr>
+                                <td><strong>#<%= room.id %></strong></td>
+                                <td><strong><%= room.room_number %></strong></td>
+                                <td style="color: var(--primary-color); font-weight: 700;"><%= formatCurrency(room.base_price) %></td>
+                                <td>
+                                    <% if (room.status === 'OCCUPIED') { %>
+                                        <span class="status-badge status-paid">Đang thuê</span>
+                                    <% } else if (room.status === 'VACANT') { %>
+                                        <span class="status-badge status-pending">Trống</span>
+                                    <% } else { %>
+                                        <span class="status-badge status-unpaid">Sửa chữa</span>
+                                    <% } %>
+                                </td>
+                                <td><%= room.tenant_name ? `${room.tenant_name} (${room.tenant_phone || ''})` : '<em>Chưa gán</em>' %></td>
+                                <td>
+                                    <a href="/admin/room/<%= room.id %>" class="btn btn-primary" style="width: auto; padding: 6px 10px; font-size: 0.8rem;">
+                                        ✏️ Hóa đơn
+                                    </a>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        </footer>
+    </div>
+</body>
+</html>

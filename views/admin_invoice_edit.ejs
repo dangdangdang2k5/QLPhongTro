@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Nút quay lại -->
+        <a href="/admin/dashboard" class="back-link">← Quay lại Dashboard</a>
+
+        <div class="card payment-card">
+            <!-- Header -->
+            <div class="payment-header">
+                <div class="payment-title">CẬP NHẬT HÓA ĐƠN <%= room.room_number | uppercase %></div>
+                <div class="payment-period">Kỳ thanh toán: Tháng <%= month %>/<%= year %></div>
+            </div>
+
+            <!-- Cảnh báo nếu hóa đơn đang PAID -->
+            <% if (invoice && invoice.status === 'PAID') { %>
+            <div class="alert-warning" style="background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 0.9rem;">
+                ⚠️ <strong>Lưu ý:</strong> Hóa đơn này hiện đang có trạng thái <strong>ĐÃ THANH TOÁN</strong>.
+            </div>
+            <% } %>
+
+            <!-- Form Cập Nhật Hóa Đơn -->
+            <form method="POST" action="/admin/room/<%= room.id %>" id="invoiceForm">
+                <input type="hidden" name="month" value="<%= month %>">
+                <input type="hidden" name="year" value="<%= year %>">
+
+                <!-- 1. Tiền phòng -->
+                <div class="form-group">
+                    <label for="room_fee" class="form-label">1. Tiền thuê phòng (VNĐ):</label>
+                    <input type="number" id="room_fee" name="room_fee" class="form-input" 
+                           value="<%= invoice ? invoice.room_fee : room.base_price %>" min="0" step="10000" required>
+                </div>
+
+                <!-- 2. Tiền điện: Chỉ số đầu & Chỉ số cuối & Đơn giá -->
+                <div class="form-group">
+                    <label class="form-label">2. Tiền điện (Chỉ số đầu - cuối):</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Số điện đầu:</span>
+                            <input type="number" id="electricity_start" name="electricity_start" class="form-input" 
+                                   value="<%= invoice ? invoice.electricity_start : 0 %>" min="0" required>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Số điện cuối:</span>
+                            <input type="number" id="electricity_end" name="electricity_end" class="form-input" 
+                                   value="<%= invoice ? invoice.electricity_end : 0 %>" min="0" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Đơn giá điện (VNĐ/số):</span>
+                        <input type="number" id="electricity_price" name="electricity_price" class="form-input" 
+                               value="<%= invoice ? invoice.electricity_price : 4000 %>" min="0" step="100" required>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">
+                        Điện tiêu thụ: <strong id="calcUnits">0</strong> số | Thành tiền: <strong id="calcElectricityText" style="color: var(--primary-color);">0đ</strong>
+                    </p>
+                </div>
+
+                <!-- 3. Tiền nước -->
+                <div class="form-group">
+                    <label for="water_fee" class="form-label">3. Tiền nước (VNĐ):</label>
+                    <input type="number" id="water_fee" name="water_fee" class="form-input" 
+                           value="<%= invoice ? invoice.water_fee : 150000 %>" min="0" step="5000" required>
+                </div>
+
+                <!-- 4. Phí phát sinh & Giảm trừ -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label for="extra_fee" class="form-label">4. Phí khác (+):</label>
+                        <input type="number" id="extra_fee" name="extra_fee" class="form-input" 
+                               value="<%= invoice ? invoice.extra_fee : 0 %>" min="0" step="10000">
+                    </div>
+                    <div class="form-group">
+                        <label for="discount_amount" class="form-label">5. Giảm trừ (-):</label>
+                        <input type="number" id="discount_amount" name="discount_amount" class="form-input" 
+                               value="<%= invoice ? invoice.discount_amount : 0 %>" min="0" step="10000">
+                    </div>
+                </div>
+
+                <!-- 5. Trạng thái thanh toán -->
+                <div class="form-group">
+                    <label for="status" class="form-label">6. Trạng thái thanh toán:</label>
+                    <select id="status" name="status" class="form-input" style="font-weight: 700; cursor: pointer;">
+                        <option value="UNPAID" <%= invoice && invoice.status === 'UNPAID' ? 'selected' : '' %>>🔴 Chưa thanh toán (UNPAID)</option>
+                        <option value="PENDING" <%= invoice && invoice.status === 'PENDING' ? 'selected' : '' %>>🟡 Đang chờ duyệt (PENDING)</option>
+                        <option value="PAID" <%= invoice && invoice.status === 'PAID' ? 'selected' : '' %>>🟢 Đã thanh toán (PAID)</option>
+                        <option value="OVERDUE" <%= invoice && invoice.status === 'OVERDUE' ? 'selected' : '' %>>🟣 Quá hạn (OVERDUE)</option>
+                    </select>
+                </div>
+
+                <!-- Bảng tổng kết thời gian thực -->
+                <div class="admin-fee-details" style="margin: 16px 0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">BẢNG TỔNG HỢP HÓA ĐƠN</div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền phòng:</span>
+                        <span class="fee-value" id="summaryRoomFee">0đ</span>
+                    </div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền điện:</span>
+                        <span class="fee-value" id="summaryElectricityFee">0đ</span>
+                    </div>
+                    <div class="fee-item">
+                        <span class="fee-label">Tiền nước:</span>
+                        <span class="fee-value" id="summaryWaterFee">0đ</span>
+                    </div>
+                    <div class="fee-item">
+                        <span class="fee-label">Phí khác / Giảm trừ:</span>
+                        <span class="fee-value" id="summaryExtraFee">0đ</span>
+                    </div>
+                    <div class="fee-item fee-total">
+                        <span class="fee-label" style="font-weight: 800; font-size: 1rem;">TỔNG THANH TOÁN:</span>
+                        <span class="fee-value" id="summaryTotalAmount" style="font-size: 1.35rem; color: var(--primary-color); font-weight: 800;">
+                            0đ
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Nút lưu hóa đơn -->
+                <button type="submit" class="btn btn-primary" style="font-size: 1.05rem; padding: 14px;">
+                    💾 LƯU HÓA ĐƠN & TRẠNG THÁI
+                </button>
+            </form>
+        </div>
+
+        <footer class="footer">
+            <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        </footer>
+    </div>
+
+    <!-- Script tự động tính toán số điện và tổng tiền tức thời -->
+    <script>
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount)) + 'đ';
+        }
+
+        function calculateInvoice() {
+            const roomFee = parseFloat(document.getElementById('room_fee').value) || 0;
+            const start = parseFloat(document.getElementById('electricity_start').value) || 0;
+            const end = parseFloat(document.getElementById('electricity_end').value) || 0;
+            const price = parseFloat(document.getElementById('electricity_price').value) || 4000;
+            const waterFee = parseFloat(document.getElementById('water_fee').value) || 0;
+            const extraFee = parseFloat(document.getElementById('extra_fee').value) || 0;
+            const discount = parseFloat(document.getElementById('discount_amount').value) || 0;
+
+            const units = Math.max(0, end >= start ? (end - start) : 0);
+            const electricityFee = units * price;
+            const total = Math.max(0, (roomFee + electricityFee + waterFee + extraFee) - discount);
+
+            document.getElementById('calcUnits').innerText = units;
+            document.getElementById('calcElectricityText').innerText = formatCurrency(electricityFee);
+            document.getElementById('summaryRoomFee').innerText = formatCurrency(roomFee);
+            document.getElementById('summaryElectricityFee').innerText = formatCurrency(electricityFee);
+            document.getElementById('summaryWaterFee').innerText = formatCurrency(waterFee);
+            document.getElementById('summaryExtraFee').innerText = `+${formatCurrency(extraFee)} / -${formatCurrency(discount)}`;
+            document.getElementById('summaryTotalAmount').innerText = formatCurrency(total);
+        }
+
+        ['room_fee', 'electricity_start', 'electricity_end', 'electricity_price', 'water_fee', 'extra_fee', 'discount_amount'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateInvoice);
+        });
+
+        calculateInvoice();
+    </script>
+</body>
+</html>

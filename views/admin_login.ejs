@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card" style="margin-top: 40px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 6px;">🔐</div>
+                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);">ADMIN LOGIN</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Cổng quản trị hệ thống QLPhongTro PRO</p>
+            </div>
+
+            <% if (error) { %>
+            <div class="alert-error">
+                <%= error %>
+            </div>
+            <% } %>
+
+            <form method="POST" action="/admin/login">
+                <div class="form-group">
+                    <label for="username" class="form-label">Tài khoản Admin:</label>
+                    <input type="text" id="username" name="username" class="form-input" 
+                           placeholder="Tên tài khoản quản trị" required autofocus autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Mật khẩu:</label>
+                    <input type="password" id="password" name="password" class="form-input" 
+                           placeholder="Mật khẩu quản trị" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px; font-size: 1.05rem; padding: 13px;">
+                    ĐĂNG NHẬP ADMIN ➔
+                </button>
+            </form>
+
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-color); font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+                💡 <em>Mặc định: <code>admin</code> / <code>admin123</code></em>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <a href="/login">🏠 Xem trang đăng nhập khách thuê</a>
+        </footer>
+    </div>
+</body>
+</html>

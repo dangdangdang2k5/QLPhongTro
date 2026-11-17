@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="margin-bottom: 0;">🏠 NHÀ TRỌ MINH HẢI</h1>
+                <a href="/logout" class="btn-logout" style="background: #fee2e2; color: #b91c1c; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;" title="Đăng xuất">
+                    Thoát 🚪
+                </a>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                    Xin chào: <strong><%= currentUser ? currentUser.fullName : 'Khách thuê' %></strong>
+                </p>
+                <span style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 999px; font-weight: 600;">
+                    <%= currentUser && currentUser.role === 'ADMIN' ? 'Admin' : 'Khách Thuê' %>
+                </span>
+            </div>
+        </header>
+
+        <!-- Danh sách phòng -->
+        <main class="room-list">
+            <% if (rooms.length === 0) { %>
+                <div class="card" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                    Hiện chưa có phòng nào được gán cho bạn. Vui lòng liên hệ chủ trọ.
+                </div>
+            <% } %>
+
+            <% rooms.forEach(room => { %>
+            <div class="room-card">
+                <div class="room-card-header">
+                    <span class="room-name"><%= room.room_number %></span>
+                    <% if (room.status === 'UNPAID') { %>
+                        <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                    <% } else if (room.status === 'PENDING') { %>
+                        <span class="status-badge status-pending">🟡 Chờ xác nhận</span>
+                    <% } else if (room.status === 'PAID') { %>
+                        <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                    <% } else if (room.status === 'OVERDUE') { %>
+                        <span class="status-badge status-overdue">🟣 Quá hạn</span>
+                    <% } %>
+                </div>
+
+                <div class="room-amount">
+                    <%= formatCurrency(room.amount) %>
+                </div>
+
+                <div class="room-action">
+                    <% if (room.invoice_id) { %>
+                        <a href="/invoice/<%= room.invoice_id %>" class="btn btn-primary">
+                            🔍 Kiểm tra hóa đơn
+                        </a>
+                    <% } else { %>
+                        <a href="/payment/<%= room.id %>" class="btn btn-primary">
+                            🔍 Thanh toán phòng
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+            <% }); %>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <% if (currentUser && currentUser.role === 'ADMIN') { %>
+                <a href="/admin/dashboard">⚙️ Mở Dashboard Quản Trị</a>
+            <% } else { %>
+                <a href="/admin/login">🔐 Dành cho Quản trị viên (Admin)</a>
+            <% } %>
+        </footer>
+    </div>
+</body>
+</html>

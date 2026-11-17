@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Nút quay lại -->
+        <a href="/" class="back-link">← Quay lại danh sách phòng</a>
+
+        <div class="card payment-card">
+            <!-- Tiêu đề hóa đơn -->
+            <div class="payment-header">
+                <div class="payment-title">HÓA ĐƠN TIỀN PHÒNG</div>
+                <div style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-top: 4px;">
+                    <%= invoice.room_number | uppercase %>
+                </div>
+                <div class="payment-period">Kỳ thanh toán: Tháng <%= invoice.payment_month %>/<%= invoice.payment_year %></div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                    Mã HĐ: <code><%= invoice.invoice_code %></code>
+                </div>
+            </div>
+
+            <!-- Bảng chi tiết các khoản phí -->
+            <div class="admin-fee-details">
+                <div class="fee-item">
+                    <span class="fee-label">1. Tiền thuê phòng:</span>
+                    <span class="fee-value"><%= formatCurrency(invoice.room_fee) %></span>
+                </div>
+
+                <div class="fee-item">
+                    <span class="fee-label">2. Tiền điện:</span>
+                    <span class="fee-value">
+                        <%= formatCurrency(invoice.electricity_fee) %>
+                    </span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); padding-left: 14px; margin-top: -4px;">
+                    ↳ <%= invoice.electricity_units %> số (<%= invoice.electricity_start %> → <%= invoice.electricity_end %>) × <%= formatCurrency(invoice.electricity_price) %>/số
+                </div>
+
+                <div class="fee-item">
+                    <span class="fee-label">3. Tiền nước:</span>
+                    <span class="fee-value"><%= formatCurrency(invoice.water_fee) %></span>
+                </div>
+
+                <% if (parseFloat(invoice.extra_fee) > 0) { %>
+                <div class="fee-item">
+                    <span class="fee-label">4. Phí phát sinh:</span>
+                    <span class="fee-value">+<%= formatCurrency(invoice.extra_fee) %></span>
+                </div>
+                <% } %>
+
+                <% if (parseFloat(invoice.discount_amount) > 0) { %>
+                <div class="fee-item">
+                    <span class="fee-label">5. Giảm trừ:</span>
+                    <span class="fee-value" style="color: var(--success-color);">-<%= formatCurrency(invoice.discount_amount) %></span>
+                </div>
+                <% } %>
+
+                <div class="fee-item fee-total">
+                    <span class="fee-label" style="font-size: 1rem; font-weight: 800;">TỔNG CỘNG:</span>
+                    <span class="fee-value" style="font-size: 1.4rem; color: var(--primary-color); font-weight: 800;">
+                        <%= formatCurrency(invoice.total_amount) %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Trạng thái hiện tại -->
+            <div style="text-align: center; margin: 6px 0;">
+                <span class="fee-label" style="font-size: 0.85rem;">Trạng thái hóa đơn:</span>
+                <div style="margin-top: 4px;">
+                    <% if (invoice.status === 'UNPAID') { %>
+                        <span class="status-badge status-unpaid">🔴 Chưa thanh toán</span>
+                    <% } else if (invoice.status === 'PENDING') { %>
+                        <span class="status-badge status-pending">🟡 Đang chờ xác nhận</span>
+                    <% } else if (invoice.status === 'PAID') { %>
+                        <span class="status-badge status-paid">🟢 Đã thanh toán</span>
+                    <% } else if (invoice.status === 'OVERDUE') { %>
+                        <span class="status-badge status-overdue">🟣 Quá hạn thanh toán</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Nút hành động tương ứng trạng thái -->
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                <% if (invoice.status === 'UNPAID' || invoice.status === 'OVERDUE') { %>
+                    <a href="/payment/<%= invoice.room_id %>" class="btn btn-primary" style="font-size: 1.05rem; padding: 14px;">
+                        💳 TIẾP TỤC THANH TOÁN (VIETQR)
+                    </a>
+                <% } else if (invoice.status === 'PENDING') { %>
+                    <div class="notice-box notice-pending">
+                        <strong>🟡 Bạn đã gửi yêu cầu xác nhận chuyển khoản.</strong><br>
+                        Vui lòng chờ chủ trọ kiểm tra tài khoản ngân hàng và duyệt hóa đơn!
+                    </div>
+                <% } else if (invoice.status === 'PAID') { %>
+                    <div class="notice-box notice-paid">
+                        <strong>🟢 Thanh toán đã hoàn thành!</strong><br>
+                        Chủ trọ đã xác nhận nhận đủ số tiền. Cảm ơn bạn!
+                    </div>
+                <% } %>
+
+                <a href="/invoice/<%= invoice.id %>/pdf" target="_blank" class="btn btn-outline-danger" style="color: #475569; border-color: #cbd5e1; background: #fff; font-size: 0.9rem; padding: 10px;">
+                    📄 Xuất / In Hóa Đơn PDF
+                </a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <a href="/">← Quay lại trang chủ</a>
+        </footer>
+    </div>
+</body>
+</html>

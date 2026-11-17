@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Nút quay lại -->
+        <a href="/invoice/<%= invoice.id %>" class="back-link">← Quay lại chi tiết hóa đơn</a>
+
+        <div class="card payment-card">
+            <!-- Header thanh toán -->
+            <div class="payment-header">
+                <div class="payment-title">THANH TOÁN TIỀN PHÒNG</div>
+                <div style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-top: 4px;">
+                    <%= invoice.room_number | uppercase %>
+                </div>
+                <div class="payment-period">Kỳ thanh toán: Tháng <%= invoice.payment_month %>/<%= invoice.payment_year %></div>
+            </div>
+
+            <!-- Khối hiển thị số tiền -->
+            <div class="payment-amount-box">
+                <div class="amount-label">Số tiền cần thanh toán:</div>
+                <div class="amount-value"><%= formatCurrency(invoice.total_amount) %></div>
+            </div>
+
+            <!-- Mã VietQR tạo động -->
+            <div class="qr-section">
+                <img src="<%= qrUrl %>" alt="Mã VietQR Chuyển Khoản" class="qr-image" loading="lazy">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; text-align: center;">
+                    📱 Mở App ngân hàng bất kỳ (MBBank, Vietcombank, Momo...) để quét mã
+                </p>
+            </div>
+
+            <!-- Danh sách thông tin chuyển khoản có nút Copy -->
+            <div class="transfer-info-list">
+                <div class="info-row">
+                    <span class="info-label">Ngân hàng:</span>
+                    <span class="info-value"><%= bankConfig.bankName %> (<%= bankConfig.bankCode %>)</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Số tài khoản:</span>
+                    <div class="info-value-group">
+                        <span id="bankAccount" class="info-value highlight"><%= bankConfig.bankAccount %></span>
+                        <button type="button" class="copy-btn" onclick="copyToClipboard('bankAccount', this)">Sao chép</button>
+                    </div>
+                </div>
+
+                <% if (bankConfig.accountName) { %>
+                <div class="info-row">
+                    <span class="info-label">Chủ tài khoản:</span>
+                    <span class="info-value"><%= bankConfig.accountName %></span>
+                </div>
+                <% } %>
+
+                <div class="info-row">
+                    <span class="info-label">Số tiền:</span>
+                    <div class="info-value-group">
+                        <span id="transferAmount" class="info-value"><%= formatCurrency(invoice.total_amount) %></span>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Nội dung CK:</span>
+                    <div class="info-value-group">
+                        <span id="transferContent" class="info-value highlight" style="font-size: 0.85rem;"><%= transferContent %></span>
+                        <button type="button" class="copy-btn" onclick="copyToClipboard('transferContent', this)">Sao chép</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút xác nhận thanh toán -->
+            <% if (invoice.status === 'UNPAID' || invoice.status === 'OVERDUE') { %>
+                <form method="POST" action="/payment/<%= invoice.id %>/confirm">
+                    <button type="submit" class="btn btn-success" style="font-size: 1.05rem; padding: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);">
+                        ✅ TÔI ĐÃ CHUYỂN KHOẢN
+                    </button>
+                </form>
+            <% } else if (invoice.status === 'PENDING') { %>
+                <div class="notice-box notice-pending">
+                    <strong>🟡 Đang chờ chủ trọ xác nhận!</strong><br>
+                    Hệ thống đã gửi thông báo đến chủ trọ qua Telegram. Bạn không cần chuyển khoản lại.
+                </div>
+            <% } else if (invoice.status === 'PAID') { %>
+                <div class="notice-box notice-paid">
+                    <strong>🟢 Hóa đơn này đã được xác nhận thanh toán thành công!</strong>
+                </div>
+            <% } %>
+        </div>
+
+        <footer class="footer">
+            <a href="/">← Về danh sách phòng</a>
+        </footer>
+    </div>
+</body>
+</html>
