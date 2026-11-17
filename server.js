@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { testConnection } = require('./config/database');
+const BillingService = require('./services/billingService');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
@@ -63,6 +64,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
     res.locals.currentUser = req.session.user || null;
     res.locals.appName = 'QLPhongTro PRO';
+    res.locals.formatCurrency = BillingService.formatCurrency;
     next();
 });
 

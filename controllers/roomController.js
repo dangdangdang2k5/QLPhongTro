@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const BillingService = require('../services/billingService');
 
 class RoomController {
     /**
@@ -23,7 +24,8 @@ class RoomController {
                 title: 'Quản Lý Danh Sách Phòng - QLPhongTro PRO',
                 rooms,
                 tenants,
-                user: req.session.user
+                user: req.session.user,
+                formatCurrency: BillingService.formatCurrency
             });
         } catch (err) {
             next(err);

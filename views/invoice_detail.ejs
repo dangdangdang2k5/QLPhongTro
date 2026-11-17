@@ -16,7 +16,7 @@
             <div class="payment-header">
                 <div class="payment-title">HÓA ĐƠN TIỀN PHÒNG</div>
                 <div style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-top: 4px;">
-                    <%= invoice.room_number | uppercase %>
+                    <%= (invoice.room_number || '').toUpperCase() %>
                 </div>
                 <div class="payment-period">Kỳ thanh toán: Tháng <%= invoice.payment_month %>/<%= invoice.payment_year %></div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">

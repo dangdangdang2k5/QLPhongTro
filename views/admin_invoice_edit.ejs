@@ -14,7 +14,7 @@
         <div class="card payment-card">
             <!-- Header -->
             <div class="payment-header">
-                <div class="payment-title">CẬP NHẬT HÓA ĐƠN <%= room.room_number | uppercase %></div>
+                <div class="payment-title">CẬP NHẬT HÓA ĐƠN <%= (room.room_number || '').toUpperCase() %></div>
                 <div class="payment-period">Kỳ thanh toán: Tháng <%= month %>/<%= year %></div>
             </div>
 
