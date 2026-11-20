@@ -63,7 +63,7 @@ class ReportController {
             doc.fontSize(10).text('THONG TIN CHUYEN KHOAN (MB BANK):', { bold: true });
             doc.text(`Ngan hang: ${process.env.BANK_NAME || 'MB Bank'}`);
             doc.text(`So tai khoan: ${process.env.BANK_ACCOUNT || '0942216511'}`);
-            doc.text(`Chu tai khoan: ${process.env.BANK_ACCOUNT_NAME || 'HO MINH DANG'}`);
+            doc.text(`Chu tai khoan: ${process.env.BANK_ACCOUNT_NAME || 'HOANG MINH DANG'}`);
             doc.text(`Noi dung: TIEN PHONG ${invoice.room_id} THANG ${invoice.payment_month}/${invoice.payment_year}`);
             doc.moveDown(2);
 
