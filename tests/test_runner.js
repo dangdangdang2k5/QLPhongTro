@@ -70,20 +70,22 @@ async function runAllTests() {
 
     // 3. Test sinh mã hóa đơn duy nhất
     test('3. BillingService - Sinh mã hóa đơn chuẩn định dạng', () => {
-        const code = BillingService.generateInvoiceCode(1, 8, 2026);
-        assert.strictEqual(code, 'INV-202608-P1');
+        const codeNov = BillingService.generateInvoiceCode(1, 11, 2026);
+        assert.strictEqual(codeNov, 'INV-202611-P1');
+        const codeAug = BillingService.generateInvoiceCode(2, 8, 2026);
+        assert.strictEqual(codeAug, 'INV-202608-P2');
     });
 
     // 4. Test VietQR Service: Tạo URL VietQR MB Bank
     test('4. VietQRService - Sinh link VietQR MB Bank động', () => {
         const url = VietQRService.generateQrUrl({
             amount: 2550000,
-            transferContent: 'TIEN PHONG 1 THANG 8/2026'
+            transferContent: 'TIEN PHONG 1 THANG 11/2026'
         });
 
         assert(url.includes('https://img.vietqr.io/image/'), 'URL phải từ domain img.vietqr.io');
         assert(url.includes('amount=2550000'), 'QR phải chứa đúng số tiền');
-        assert(url.includes('addInfo=TIEN+PHONG+1+THANG+8%2F2026'), 'QR phải chứa đúng nội dung CK');
+        assert(url.includes('addInfo=TIEN+PHONG+1+THANG+11%2F2026'), 'QR phải chứa đúng nội dung CK');
     });
 
     // 5. Test Telegram Service: Phân tách Chat ID

@@ -10,8 +10,9 @@ class PaymentController {
     static async showPaymentPage(req, res, next) {
         try {
             const roomId = parseInt(req.params.roomId, 10);
-            const month = parseInt(process.env.PAYMENT_MONTH || 8, 10);
-            const year = parseInt(process.env.PAYMENT_YEAR || 2026, 10);
+            const now = new Date();
+            const month = parseInt(process.env.PAYMENT_MONTH || (now.getMonth() + 1), 10);
+            const year = parseInt(process.env.PAYMENT_YEAR || now.getFullYear(), 10);
 
             const [invoices] = await pool.query(`
                 SELECT i.*, r.room_number 

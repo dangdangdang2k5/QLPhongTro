@@ -100,8 +100,9 @@ class InvoiceController {
     static async showEditInvoiceForm(req, res, next) {
         try {
             const roomId = parseInt(req.params.roomId, 10);
-            const month = parseInt(req.query.month || process.env.PAYMENT_MONTH || 8, 10);
-            const year = parseInt(req.query.year || process.env.PAYMENT_YEAR || 2026, 10);
+            const now = new Date();
+            const month = parseInt(req.query.month || process.env.PAYMENT_MONTH || (now.getMonth() + 1), 10);
+            const year = parseInt(req.query.year || process.env.PAYMENT_YEAR || now.getFullYear(), 10);
 
             const [rooms] = await pool.query('SELECT * FROM rooms WHERE id = ?', [roomId]);
             if (rooms.length === 0) {

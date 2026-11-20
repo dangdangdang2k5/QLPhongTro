@@ -7,6 +7,10 @@ class RoomController {
      */
     static async listRooms(req, res, next) {
         try {
+            const now = new Date();
+            const currentMonth = parseInt(process.env.PAYMENT_MONTH || (now.getMonth() + 1), 10);
+            const currentYear = parseInt(process.env.PAYMENT_YEAR || now.getFullYear(), 10);
+
             const [rooms] = await pool.query(`
                 SELECT r.*, u.full_name as tenant_name, u.phone as tenant_phone,
                        i.total_amount as current_bill, i.status as current_bill_status, i.id as invoice_id
@@ -14,7 +18,7 @@ class RoomController {
                 LEFT JOIN users u ON r.current_tenant_id = u.id
                 LEFT JOIN invoices i ON i.room_id = r.id AND i.payment_month = ? AND i.payment_year = ?
                 ORDER BY r.id ASC
-            `, [parseInt(process.env.PAYMENT_MONTH || 8, 10), parseInt(process.env.PAYMENT_YEAR || 2026, 10)]);
+            `, [currentMonth, currentYear]);
 
             const [tenants] = await pool.query(`
                 SELECT id, username, full_name, phone FROM users WHERE role = 'TENANT' ORDER BY full_name ASC

@@ -13,8 +13,9 @@ const BillingService = require('../services/billingService');
  */
 router.get('/', requireAuth, async (req, res, next) => {
     try {
-        const month = parseInt(process.env.PAYMENT_MONTH || 8, 10);
-        const year = parseInt(process.env.PAYMENT_YEAR || 2026, 10);
+        const now = new Date();
+        const month = parseInt(process.env.PAYMENT_MONTH || (now.getMonth() + 1), 10);
+        const year = parseInt(process.env.PAYMENT_YEAR || now.getFullYear(), 10);
 
         let query = `
             SELECT r.id, r.room_number, r.status as room_status,

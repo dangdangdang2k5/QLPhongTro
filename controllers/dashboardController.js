@@ -8,8 +8,9 @@ class DashboardController {
      */
     static async showDashboard(req, res, next) {
         try {
-            const currentMonth = parseInt(process.env.PAYMENT_MONTH || 8, 10);
-            const currentYear = parseInt(process.env.PAYMENT_YEAR || 2026, 10);
+            const now = new Date();
+            const currentMonth = parseInt(process.env.PAYMENT_MONTH || (now.getMonth() + 1), 10);
+            const currentYear = parseInt(process.env.PAYMENT_YEAR || now.getFullYear(), 10);
 
             // 1. Thống kê KPI phòng
             const [[roomStats]] = await pool.query(`
