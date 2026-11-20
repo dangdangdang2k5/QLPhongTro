@@ -71,7 +71,7 @@ router.post('/telegram/webhook', async (req, res) => {
                 `Kết nối thành công!\n\n` +
                 `Chat ID của bạn:\n` +
                 `<code>${chatId}</code>\n\n` +
-                `<i>(Hãy copy số Chat ID này và dán vào ADMIN_TELEGRAM_CHAT_ID trong file .env hoặc trên Render nhé!)</i>`;
+                `<i>(Hãy copy số Chat ID này và dán vào ADMIN_TELEGRAM_CHAT_ID trong file .env trên máy chủ VPS nhé!)</i>`;
 
             await TelegramService.sendTelegramMessage(chatId, replyText);
         }

@@ -119,17 +119,63 @@ Truy cập website tại:
 
 ---
 
-## ☁️ Triển Khai Lên Render.com
+## 🖥️ Triển Khai Trên Máy Chủ Cloud VPS (Ubuntu Linux & Nginx)
 
-1. **Tạo Web Service trên Render** kết nối với repository GitHub này.
-2. Cấu hình các mục:
-   - **Environment:** `Node`
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-3. Cung cấp các biến môi trường tại tab **Environment Variables**:
-   - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (kết nối MySQL Cloud như Aiven, Clever Cloud hoặc Supabase)
-   - `SESSION_SECRET`
-   - `BANK_CODE`: `MB`
-   - `BANK_ACCOUNT`: `0942216511`
-   - `BANK_ACCOUNT_NAME`: `HOANG MINH DANG`
-   - `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_CHAT_ID`, `APP_BASE_URL`
+1. **Kết nối SSH vào máy chủ VPS**:
+   ```bash
+   ssh -i ~/.ssh/oracle_vps ubuntu@129.221.157.112
+   ```
+
+2. **Cài đặt môi trường cần thiết**:
+   ```bash
+   # Cài đặt Node.js v20 LTS và MySQL Server 8.0
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs mysql-server nginx
+   ```
+
+3. **Tải mã nguồn và cài đặt thư viện**:
+   ```bash
+   sudo git clone https://github.com/dangdangdang2k5/QLPhongTro.git /opt/phongtro
+   cd /opt/phongtro
+   npm install --omit=dev
+   ```
+
+4. **Cấu hình biến môi trường (`/opt/phongtro/.env`)**:
+   ```env
+   PORT=5000
+   NODE_ENV=production
+   SESSION_SECRET=dev-secret-key-12345
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_USER=phongtro_user
+   DB_PASSWORD=PhongTro@2026!Secure
+   DB_NAME=qlphongtro
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=admin123
+   TELEGRAM_BOT_TOKEN=8510620043:AAHgBjWjU4Gb7oLZRbhhOE8a9QGXNWd6O4g
+   TELEGRAM_BOT_USERNAME=PhongTroMH_bot
+   ADMIN_TELEGRAM_CHAT_ID=7387114957
+   APP_BASE_URL=http://quanliphongtro.duckdns.org
+   BANK_CODE=MB
+   BANK_NAME=MB Bank
+   BANK_ACCOUNT=0942216511
+   BANK_ACCOUNT_NAME=HOANG MINH DANG
+   PAYMENT_MONTH=11
+   PAYMENT_YEAR=2026
+   ```
+
+5. **Khởi tạo cơ sở dữ liệu MySQL**:
+   ```bash
+   npm run init-db
+   ```
+
+6. **Quản lý dịch vụ tự động với Systemd (`/etc/systemd/system/phongtro.service`)**:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable phongtro
+   sudo systemctl restart phongtro
+   ```
+
+7. **Cấu hình Nginx Reverse Proxy (Cổng 80 -> Cổng 5000)**:
+   - Gán tên miền chính thức: **`http://quanliphongtro.duckdns.org/`**
+   - Nginx nhận request công khai và chuyển tiếp nội bộ về ứng dụng Node.js.
