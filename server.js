@@ -15,6 +15,9 @@ const { errorHandler, notFoundHandler } = require('./middlewares/errorMiddleware
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Hỗ trợ reverse proxy (Nginx)
+app.set('trust proxy', 1);
+
 // 1. Cấu hình bảo mật Helmet (cho phép tải ảnh VietQR và thư viện Chart.js)
 app.use(helmet({
     contentSecurityPolicy: {
@@ -26,7 +29,7 @@ app.use(helmet({
             connectSrc: ["'self'"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             objectSrc: ["'none'"],
-            upgradeInsecureRequests: []
+            upgradeInsecureRequests: null
         }
     }
 }));
@@ -49,7 +52,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 1 ngày
     }
